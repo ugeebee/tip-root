@@ -15,49 +15,46 @@ func SSEWait(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Tell the Next.js browser to expect a stream, not a standard JSON payload
+	// 1. Set the headers in memory
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no")
 
-	// 2. We need a Flusher to push data immediately over the wire
+	// 2. Verify streaming is supported
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "Streaming unsupported by server", http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
 
-	// 3. Register this viewer in the switchboard
+	// 5. Now register the viewer in the switchboard
 	msgChan := sse.PaymentHub.Register(serverKey)
-
-	// Ensure memory is freed the second the viewer closes the tab
 	defer sse.PaymentHub.Unregister(serverKey)
 
-	// 4. The Infinite Wait Loop
+	// 6. The Wait Loop
 	for {
 		select {
 		case msg, ok := <-msgChan:
 			if !ok {
-				return // Channel was closed internally
+				return
 			}
 
-			// Check if it's a heartbeat comment (starts with a colon)
+			// Handle Heartbeats
 			if len(msg) > 0 && msg[0] == ':' {
-				// Write the raw heartbeat comment directly (already contains \n\n from the hub)
 				fmt.Fprint(w, msg)
 				flusher.Flush()
-				continue // Keep the loop open! Do not return.
+				continue
 			}
 
-			// SSE Protocol dictates payloads must start with "data: " and end with "\n\n"
+			// Handle Actual Payments
 			fmt.Fprintf(w, "data: %s\n\n", msg)
 			flusher.Flush()
-
-			// Once the actual payment succeeds, we can safely kill this connection
 			return
 
 		case <-r.Context().Done():
-			// The viewer closed the tab, their internet dropped, or they hit the back button
 			fmt.Println("Viewer disconnected:", serverKey)
 			return
 		}
