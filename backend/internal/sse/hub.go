@@ -1,6 +1,7 @@
 package sse
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -31,13 +32,13 @@ func (h *Hub) startHeartbeatWorker() {
 
 	for range ticker.C {
 		h.mu.RLock()
-		// Broadcast the invisible SSE comment to every open connection at once
+		// Print to your terminal logs to see if it is running
+		fmt.Printf("[DEBUG] Sending heartbeat to %d active connections\n", len(h.clients))
+
 		for _, ch := range h.clients {
 			select {
 			case ch <- ": keepalive\n\n":
 			default:
-				// If a browser tab is lagging or dead and its channel is full,
-				// we skip it so one slow user doesn't stall the entire server.
 			}
 		}
 		h.mu.RUnlock()
