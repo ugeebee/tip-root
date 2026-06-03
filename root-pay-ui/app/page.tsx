@@ -73,6 +73,32 @@ export default function TipPage() {
         upiDeeplink: data.upi_deeplink,
       }));
 
+      // --- INJECTED: Save to Local Storage for 30 Days (Support Ledger) ---
+      try {
+        const newTip = {
+          clientKey: clientKey,
+          message: message || 'No message provided',
+          date: new Date().toISOString()
+        };
+        
+        // Fetch existing history from the browser, or start an empty array
+        const existingHistory = JSON.parse(localStorage.getItem('rootpay_history') || '[]');
+        
+        // Create a cutoff date for 30 days ago
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        // Keep only transactions newer than 30 days
+        const filteredHistory = existingHistory.filter((t: any) => new Date(t.date) > thirtyDaysAgo);
+        
+        // Save the updated list back to the browser
+        localStorage.setItem('rootpay_history', JSON.stringify([newTip, ...filteredHistory]));
+      } catch (storageError) {
+        // We catch this silently so strict incognito modes don't break the actual payment flow
+        console.error("Failed to save transaction history locally", storageError);
+      }
+      // ----------------------------------------------------------------------
+
       // Redirect viewer to the dedicated checkout route
       router.push(`/checkout?client_key=${clientKey}`);
 

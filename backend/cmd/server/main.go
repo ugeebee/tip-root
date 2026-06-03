@@ -38,6 +38,7 @@ func main() {
 		//r.Get("/tips", handlers.GetTip)
 		r.Get("/tips/stream", handlers.SSEWait)
 		r.Post("/webhooks/upi", handlers.UPIWebhook)
+		r.Post("/api/support", handlers.SubmitSupportTicket)
 		// r.Get("/ws/alerts", handlers.OBSWebSocket)
 	})
 	port := "8080"
