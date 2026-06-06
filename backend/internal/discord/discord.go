@@ -67,3 +67,30 @@ func SendSupportTicket(clientKey, upiID, issue string) error {
 
 	return nil
 }
+
+// Add this function to the bottom of your existing internal/discord/discord.go file
+
+func SendMessage(content string) error {
+	webhookURL := os.Getenv("DISCORD_WEBHOOK_URL")
+	if webhookURL == "" {
+		return fmt.Errorf("DISCORD_WEBHOOK_URL environment variable is not set")
+	}
+
+	payload := map[string]string{"content": content}
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post(webhookURL, "application/json", bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("discord API rejected the payload: status %d", resp.StatusCode)
+	}
+
+	return nil
+}

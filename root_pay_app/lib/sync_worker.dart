@@ -1,39 +1,41 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:workmanager/workmanager.dart';
 import 'database_helper.dart';
-import 'api_service.dart';
+
+const String webhookUrl = 'https://root.ugbhartariya.com/api/webhooks/upi';
+const String authToken = 'Bearer super_secret_string_12345'; // Update to match your Go server
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    
     final dbHelper = DatabaseHelper.instance;
-
-    // 1. Silent DB Cleanup (1st of the month logic)
-    try {
-      int deletedCount = await dbHelper.deleteOldTransactions();
-      if (deletedCount > 0) {
-        print("🧹 DB Cleanup: Purged $deletedCount old transactions.");
-      }
-    } catch (e) {
-      print("Failed to run database cleanup: $e");
-    }
-
-    // 2. Fetch and process unsent queue
     final unsentList = await dbHelper.getUnsentTransactions();
+
     if (unsentList.isEmpty) return Future.value(true);
 
     for (var tx in unsentList) {
       int id = tx['id'];
       String clientKey = tx['client_key'];
 
-      bool success = await ApiService.pushTransaction(clientKey);
+      try {
+        final response = await http.post(
+          Uri.parse(webhookUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authToken,
+          },
+          body: jsonEncode({'client_key': clientKey}),
+        );
 
-      if (success) {
-        await dbHelper.markAsSent(id);
-        print("Background Sync Success: $clientKey");
+        if (response.statusCode == 200) {
+          await dbHelper.markAsSent(id);
+          print("✅ WorkManager Sync Success: $clientKey");
+        }
+      } catch (e) {
+        print("❌ WorkManager Sync Failed for $clientKey: $e");
       }
     }
-
     return Future.value(true);
   });
 }

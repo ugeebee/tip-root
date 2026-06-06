@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/ugeebee/root-pay/backend/internal/models"
 )
 
 var (
@@ -49,4 +50,29 @@ func InitDB() *pgxpool.Pool {
 	})
 
 	return DB
+}
+
+func ProcessWebhookTip(clientKey string) (*models.Tip, error) {
+	query := `
+		UPDATE tips 
+		SET status = 'PAID' 
+		WHERE client_key = $1 AND status = 'PENDING'
+		RETURNING streamer_id, name, amount, message
+	`
+	var tip models.Tip
+	tip.ClientKey = clientKey
+
+	err := DB.QueryRow(context.Background(), query, clientKey).Scan(
+		&tip.StreamerID, &tip.Name, &tip.Amount, &tip.Message,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &tip, nil
+}
+
+func UpdateNSFWFlag(clientKey string, isNSFW bool) error {
+	query := `UPDATE tips SET is_nsfw = $1 WHERE client_key = $2`
+	_, err := DB.Exec(context.Background(), query, isNSFW, clientKey)
+	return err
 }

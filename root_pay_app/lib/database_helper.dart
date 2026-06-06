@@ -62,24 +62,4 @@ class DatabaseHelper {
       whereArgs: ['unsent'],
     );
   }
-
-  Future<List<Map<String, dynamic>>> getAllTransactions() async {
-    final db = await instance.database;
-    // Order by newest first for the UI
-    return await db.query('transactions', orderBy: 'id DESC'); 
-  }
-
-  Future<int> deleteOldTransactions() async {
-    final db = await instance.database;
-    
-    DateTime now = DateTime.now();
-    // 1st of the CURRENT month
-    DateTime firstOfThisMonth = DateTime(now.year, now.month, 1);
-    
-    return await db.delete(
-      'transactions',
-      where: 'time < ?',
-      whereArgs: [firstOfThisMonth.toIso8601String()],
-    );
-  }
 }

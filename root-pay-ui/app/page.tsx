@@ -68,9 +68,8 @@ export default function TipPage() {
         return;
       }
 
-      // Securely pass the backend response to the next page using Session Storage
+      // Securely pass ONLY the UPI deeplink to the next page using Session Storage
       sessionStorage.setItem('rootpay_gateway', JSON.stringify({
-        serverKey: data.server_key,
         upiDeeplink: data.upi_deeplink,
       }));
 
@@ -82,20 +81,13 @@ export default function TipPage() {
           date: new Date().toISOString()
         };
         
-        // Fetch existing history from the browser, or start an empty array
         const existingHistory = JSON.parse(localStorage.getItem('rootpay_history') || '[]');
-        
-        // Create a cutoff date for 30 days ago
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        // Keep only transactions newer than 30 days
         const filteredHistory = existingHistory.filter((t: any) => new Date(t.date) > thirtyDaysAgo);
         
-        // Save the updated list back to the browser
         localStorage.setItem('rootpay_history', JSON.stringify([newTip, ...filteredHistory]));
       } catch (storageError) {
-        // We catch this silently so strict incognito modes don't break the actual payment flow
         console.error("Failed to save transaction history locally", storageError);
       }
       // ----------------------------------------------------------------------
@@ -118,7 +110,6 @@ export default function TipPage() {
         </div>
         
         <div className="flex items-center gap-6">
-          {/* THE NEW SUPPORT BUTTON */}
           <Link href="/support" className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
             <LifeBuoy size={18} /> Support
           </Link>
@@ -130,7 +121,6 @@ export default function TipPage() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column (Unchanged) */}
         <div className="lg:col-span-5 flex flex-col gap-6">
           <div className="bg-white/60 rounded-2xl p-8 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center h-[280px]">
             <div className="p-3 bg-gray-100 text-gray-400 rounded-xl mb-4"><HeartHandshake size={28} /></div>
@@ -154,7 +144,6 @@ export default function TipPage() {
           </div>
         </div>
 
-        {/* Right Column (Form Only) */}
         <div className="lg:col-span-7">
           <div className="bg-white rounded-2xl p-8 shadow-[0_2px_15px_-3px_rgba(6,81,237,0.1)] min-h-[500px] flex flex-col">
             <div className="flex items-center justify-between mb-8">

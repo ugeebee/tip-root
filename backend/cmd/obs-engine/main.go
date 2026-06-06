@@ -1,0 +1,43 @@
+package main
+
+import (
+	"encoding/json"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/nats-io/nats.go"
+	"github.com/ugeebee/root-pay/backend/internal/eventbus"
+	"github.com/ugeebee/root-pay/backend/internal/models"
+)
+
+func main() {
+	nc := eventbus.Connect()
+	defer nc.Close()
+
+	_, err := nc.Subscribe("tips.processed", func(m *nats.Msg) {
+		var event models.TipEvent
+		json.Unmarshal(m.Data, &event)
+
+		// DROP UNSAFE TIPS
+		if event.IsNSFW {
+			log.Printf("[OBS] Dropped flagged payload for %s", event.ClientKey)
+			return
+		}
+
+		log.Printf("[OBS] Rendering safe tip: %s tipped %.2f", event.Name, event.Amount)
+
+		// Add your OBS specific logic here (e.g. broadcasting to an OBS specific WebSocket)
+	})
+
+	if err != nil {
+		log.Fatalf("NATS Subscription failed: %v", err)
+	}
+
+	log.Println("OBS Engine listening on NATS...")
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	<-sigChan
+}
