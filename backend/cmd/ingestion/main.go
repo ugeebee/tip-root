@@ -6,9 +6,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"github.com/ugeebee/root-pay/backend/internal/database"
 	"github.com/ugeebee/root-pay/backend/internal/eventbus"
+	"github.com/ugeebee/root-pay/backend/internal/handlers"
 	"github.com/ugeebee/root-pay/backend/internal/models"
 
 	goaway "github.com/TwiN/go-away"
@@ -27,45 +31,56 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, relying on system environment variables")
 	}
-	database.InitDB() // Initialize DB connection
+
+	database.InitDB()
 
 	server := &IngestionServer{
 		nc: eventbus.Connect(),
 	}
 	defer server.nc.Close()
 
-	http.HandleFunc("/api/v1/webhooks/upi", server.handleProxyWebhook)
-	log.Println("Ingestion Service listening on :8081...")
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000", "https://xyz.com"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
+
+	r.Route("/api", func(r chi.Router) {
+		// 1. The Frontend creates the tip here
+		r.Post("/tips", handlers.CreateTip)
+
+		// 2. Razorpay/Proxy sends the payment success here
+		r.Post("/webhooks/upi", server.handleProxyWebhook)
+
+		// 3. Support Tickets
+		r.Post("/support", handlers.SubmitSupportTicket)
+	})
+
+	log.Println("Ingestion API Service listening on :8080...")
+	log.Fatal(http.ListenAndServe(":8081", r))
 }
 
 func (s *IngestionServer) handleProxyWebhook(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var req IncomingProxyPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid payload", http.StatusBadRequest)
 		return
 	}
 
-	// 1. Fetch & Mark Paid (Atomic update)
 	tipRecord, err := database.ProcessWebhookTip(req.ClientKey)
 	if err != nil {
 		log.Printf("Tip not found or already processed: %s", req.ClientKey)
-		w.WriteHeader(http.StatusOK) // Return 200 so the webhook proxy stops retrying
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
-	// 2. Profanity Check
 	isNSFW := goaway.IsProfane(tipRecord.Name) || goaway.IsProfane(tipRecord.Message)
-
-	// 3. Update Database State
 	_ = database.UpdateNSFWFlag(req.ClientKey, isNSFW)
 
-	// 4. Construct Event
 	event := models.TipEvent{
 		ClientKey:  req.ClientKey,
 		StreamerID: tipRecord.StreamerID,
@@ -78,7 +93,6 @@ func (s *IngestionServer) handleProxyWebhook(w http.ResponseWriter, r *http.Requ
 
 	eventData, _ := json.Marshal(event)
 
-	// 5. Broadcast
 	if err := s.nc.Publish("tips.processed", eventData); err != nil {
 		log.Printf("Failed to publish to NATS: %v", err)
 	}
