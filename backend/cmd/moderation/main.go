@@ -19,10 +19,11 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, relying on system environment variables")
 	}
-	nc := eventbus.Connect()
+	nc, js := eventbus.Connect()
 	defer nc.Close()
 
-	_, err := nc.Subscribe("tips.processed", func(m *nats.Msg) {
+	_, err := js.Subscribe("tips.processed", func(m *nats.Msg) {
+		defer m.Ack()
 		var event models.TipEvent
 		json.Unmarshal(m.Data, &event)
 		if !event.IsNSFW {
@@ -35,7 +36,7 @@ func main() {
 			event.Name, event.Amount, event.Message)
 
 		discord.SendMessage(warningMsg)
-	})
+	}, nats.Durable("moderation-service"), nats.ManualAck())
 
 	if err != nil {
 		log.Fatalf("NATS Subscription failed: %v", err)

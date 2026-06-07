@@ -21,10 +21,11 @@ func main() {
 	}
 	sse.InitHub()
 
-	nc := eventbus.Connect()
+	nc, js := eventbus.Connect()
 	defer nc.Close()
 
-	_, err := nc.Subscribe("tips.processed", func(m *nats.Msg) {
+	_, err := js.Subscribe("tips.processed", func(m *nats.Msg) {
+		defer m.Ack()
 		var event models.TipEvent
 		json.Unmarshal(m.Data, &event)
 
@@ -32,7 +33,7 @@ func main() {
 
 		payload := `{"status": "PAID"}`
 		sse.PaymentHub.Publish(event.ClientKey, payload)
-	})
+	}, nats.Durable("frontend-sse-service"), nats.ManualAck())
 
 	if err != nil {
 		log.Fatalf("NATS Subscription failed: %v", err)

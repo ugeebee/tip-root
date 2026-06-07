@@ -21,6 +21,7 @@ import (
 
 type IngestionServer struct {
 	nc *nats.Conn
+	js nats.JetStreamContext
 }
 
 type IncomingPayload struct {
@@ -32,8 +33,10 @@ func main() {
 		log.Println("No .env file found, relying on system environment variables")
 	}
 	database.InitDB()
+	nc, js := eventbus.Connect()
 	server := &IngestionServer{
-		nc: eventbus.Connect(),
+		nc: nc,
+		js: js,
 	}
 	defer server.nc.Close()
 
@@ -86,8 +89,8 @@ func (s *IngestionServer) handleWebhook(w http.ResponseWriter, r *http.Request) 
 
 	eventData, _ := json.Marshal(event)
 
-	if err := s.nc.Publish("tips.processed", eventData); err != nil {
-		log.Printf("Failed to publish to NATS: %v", err)
+	if _, err := s.js.Publish("tips.processed", eventData); err != nil {
+		log.Printf("Failed to publish to JetStream: %v", err)
 	}
 
 	w.WriteHeader(http.StatusOK)
