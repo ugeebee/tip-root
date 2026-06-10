@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/dashboard')) {
     
     // 2. Look for the HTTP-only cookie your Go backend issued during the Discord OAuth flow
-    const sessionCookie = request.cookies.get('root_session');
+    const sessionCookie = request.cookies.get('root_access');
 
     // 3. If the cookie is missing, immediately redirect them to the login screen
     if (!sessionCookie) {
