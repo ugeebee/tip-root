@@ -39,6 +39,12 @@ export default function Home() {
           </p>
 
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/contact"
+              className="px-8 py-3 rounded-full bg-gradient-to-r from-[#fbabff] to-[#d0bcff] text-[#09090B] font-bold hover:opacity-90 transition-opacity shadow-[0_0_20px_rgba(251,171,255,0.3)] hover:shadow-[0_0_30px_rgba(251,171,255,0.5)]"
+            >
+              Join the Platform
+            </Link>
           </div>
         </div>
       </main>
@@ -48,8 +54,9 @@ export default function Home() {
         <p>&copy; 2026 Tip Root. All rights reserved.</p>
         <div className="flex gap-6">
           <Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link>
-          <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
-          <Link href="#" className="hover:text-white transition-colors">Terms of Condition</Link>
+          <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+          <Link href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link>
         </div>
       </footer>
     </div>
