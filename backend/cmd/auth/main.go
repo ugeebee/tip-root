@@ -218,7 +218,7 @@ func claimAccountHandler(w http.ResponseWriter, r *http.Request) {
 	overlayToken := generateSecureToken()
 
 	insertQuery := `
-		INSERT INTO streamers (id, discord_id, display_name, email, overlayToken)
+		INSERT INTO streamers (id, discord_id, display_name, email, overlay_token)
 		VALUES ($1, $2, $3, $4, $5)
 	`
 	_, err = dbPool.Exec(r.Context(), insertQuery, streamerID, claims.DiscordID, claims.Username, claims.Email, overlayToken)
