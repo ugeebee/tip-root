@@ -1,24 +1,65 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { HeartHandshake, User, Zap, CircleUserRound, Clock, MonitorOff, LifeBuoy} from 'lucide-react';
+import { HeartHandshake, User, Zap, CircleUserRound, MonitorOff, LifeBuoy } from 'lucide-react';
 
-export default function TipPage() {
+interface StreamerData {
+  streamerID: string;
+  streamer_tag: string;
+  support: {
+    title: string;
+    total: number;
+    completed: number;
+  };
+  live_link: string;
+}
+
+function TipsEngine() {
   const router = useRouter();
-  
+  const searchParams = useSearchParams();
+  const streamerIDParam = searchParams.get('streamerID');
+
+  const [streamerData, setStreamerData] = useState<StreamerData | null>(null);
+  const [isLoadingStreamer, setIsLoadingStreamer] = useState(true);
+  const [serverError, setServerError] = useState(false);
+
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isLive, setIsLive] = useState(false);
 
   const presetAmounts = [50, 100, 250, 500, 1000];
-  const BACKEND_URL = '/api'; 
-  const STREAMER_ID = '88888888'; 
+  const BACKEND_URL = '/api';
+
+  // Fetch streamer data on load
+  useEffect(() => {
+    async function fetchStreamerData() {
+      if (!streamerIDParam) {
+        setIsLoadingStreamer(false);
+        setError("No streamer ID provided in URL.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/streamer?streamerID=${streamerIDParam}`);
+        if (!res.ok) throw new Error("Failed to fetch streamer data.");
+
+        const data = await res.json();
+        setStreamerData(data);
+      } catch (err) {
+        console.error(err);
+        setServerError(true);
+      } finally {
+        setIsLoadingStreamer(false);
+      }
+    }
+
+    fetchStreamerData();
+  }, [streamerIDParam]);
 
   const handlePresetClick = (amount: number) => {
     setSelectedAmount(amount);
@@ -30,7 +71,10 @@ export default function TipPage() {
     const d = new Date();
     const timestamp = `${pad(d.getDate(), 2)}${pad(d.getMonth() + 1, 2)}${d.getFullYear()}${pad(d.getHours(), 2)}${pad(d.getMinutes(), 2)}${pad(d.getSeconds(), 2)}${pad(d.getMilliseconds(), 3)}`;
     const entropy = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
-    return `${STREAMER_ID}${timestamp}${entropy}`; 
+
+    // Use the fetched streamer ID or default to 8 zeros if something fails
+    const activeStreamerId = streamerData?.streamerID || '00000000';
+    return `${activeStreamerId}${timestamp}${entropy}`;
   };
 
   const handleInitializePayment = async (e: React.FormEvent) => {
@@ -39,6 +83,11 @@ export default function TipPage() {
 
     if (!name || !finalAmount) {
       setError('Name and Amount are required.');
+      return;
+    }
+
+    if (!streamerData?.streamerID) {
+      setError('Streamer data is missing. Cannot process payment.');
       return;
     }
 
@@ -51,7 +100,7 @@ export default function TipPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          streamer_id: STREAMER_ID,
+          streamer_id: streamerData.streamerID,
           client_key: clientKey,
           name,
           message,
@@ -62,58 +111,65 @@ export default function TipPage() {
       if (!res.ok) throw new Error(await res.text() || 'Failed to initialize gateway.');
 
       const data = await res.json();
-      
+
       if (data.is_paid) {
         setError('This session is stale. Please try again.');
         return;
       }
 
-      // Securely pass ONLY the UPI deeplink to the next page using Session Storage
       sessionStorage.setItem('rootpay_gateway', JSON.stringify({
         upiDeeplink: data.upi_deeplink,
       }));
 
-      // --- INJECTED: Save to Local Storage for 30 Days (Support Ledger) ---
       try {
         const newTip = {
           clientKey: clientKey,
           message: message || 'No message provided',
           date: new Date().toISOString()
         };
-        
+
         const existingHistory = JSON.parse(localStorage.getItem('rootpay_history') || '[]');
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const filteredHistory = existingHistory.filter((t: any) => new Date(t.date) > thirtyDaysAgo);
-        
+
         localStorage.setItem('rootpay_history', JSON.stringify([newTip, ...filteredHistory]));
       } catch (storageError) {
         console.error("Failed to save transaction history locally", storageError);
       }
-      // ----------------------------------------------------------------------
 
-      // Redirect viewer to the dedicated checkout route
       router.push(`/checkout?client_key=${clientKey}`);
 
     } catch (err: any) {
       setError(err.message || 'Could not connect to Go backend.');
       setLoading(false);
-    } 
+    }
   };
+
+  const isLive = streamerData?.live_link && streamerData.live_link.trim() !== '';
+
+  if (serverError) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center">
+        <div className="text-xl font-bold text-red-600">unexpected error occured</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] font-sans text-gray-900">
       <nav className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100">
         <div className="flex items-center gap-6">
-          <div className="text-xl font-bold tracking-tight text-[#6D28D9]">notBruce</div>
-          <span className="text-sm font-medium text-gray-500">Clips</span>
+          <div className="text-xl font-bold tracking-tight text-[#6D28D9]">
+            {isLoadingStreamer ? 'Loading...' : streamerData?.streamer_tag || 'Unknown Streamer'}
+          </div>
         </div>
-        
+
         <div className="flex items-center gap-6">
           <Link href="/support" className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
             <LifeBuoy size={18} /> Support
           </Link>
-          
+
           <div className="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center text-gray-400">
             <CircleUserRound size={20} />
           </div>
@@ -122,23 +178,57 @@ export default function TipPage() {
 
       <main className="max-w-5xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-5 flex flex-col gap-6">
+
+          {/* Support Stats Box */}
           <div className="bg-white/60 rounded-2xl p-8 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center h-[280px]">
-            <div className="p-3 bg-gray-100 text-gray-400 rounded-xl mb-4"><HeartHandshake size={28} /></div>
-            <h2 className="text-lg font-bold text-gray-800 mb-2">Support the Stream</h2>
-            <div className="inline-flex items-center gap-1.5 bg-purple-50 text-[#6D28D9] text-xs font-bold px-2.5 py-1 rounded-md mb-3 border border-purple-100"><Clock size={14} /> UPCOMING FEATURE</div>
-            <p className="text-sm text-gray-500">Live goals, recent tips, and top donor leaderboards will be available here soon.</p>
+            <div className="p-3 bg-gray-100 text-[#6D28D9] rounded-xl mb-4">
+              <HeartHandshake size={28} />
+            </div>
+
+            {streamerData?.support ? (
+              <div className="w-full">
+                <h2 className="text-lg font-bold text-gray-800 mb-6">{streamerData.support.title}</h2>
+                <div className="flex justify-between text-sm font-medium text-gray-600 mb-2">
+                  <span>₹{streamerData.support.completed} raised</span>
+                  <span>₹{streamerData.support.total} goal</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    className="bg-gradient-to-r from-[#6D28D9] to-[#fbabff] h-3 rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min(100, (streamerData.support.completed / streamerData.support.total) * 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-lg font-bold text-gray-800 mb-2">Support the Stream</h2>
+                <p className="text-sm text-gray-500">Live goals will be displayed here.</p>
+              </>
+            )}
           </div>
 
+          {/* Stream Overlay Box */}
           <div className="bg-[#0A0A0A] rounded-2xl overflow-hidden shadow-md relative group h-[240px] flex items-center justify-center border border-gray-900">
             {isLive ? (
               <>
-                <iframe src="https://player.twitch.tv/?channel=shroud&parent=localhost" height="100%" width="100%" allowFullScreen className="absolute inset-0 z-0"></iframe>
-                <div className="absolute bottom-4 left-4 bg-red-600/90 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded flex items-center gap-1.5 z-10"><div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>LIVE</div>
+                <iframe
+                  src={streamerData.live_link}
+                  height="100%"
+                  width="100%"
+                  allowFullScreen
+                  className="absolute inset-0 z-0"
+                ></iframe>
+                <div className="absolute bottom-4 left-4 bg-red-600/90 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded flex items-center gap-1.5 z-10">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>LIVE
+                </div>
               </>
             ) : (
               <>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#6D28D9]/10 to-transparent z-0"></div>
-                <div className="flex flex-col items-center justify-center text-gray-600 z-10 space-y-3"><MonitorOff size={32} className="opacity-40" /><span className="text-xs font-bold tracking-widest uppercase opacity-60">Waiting for live...</span></div>
+                <div className="flex flex-col items-center justify-center text-gray-600 z-10 space-y-3">
+                  <MonitorOff size={32} className="opacity-40" />
+                  <span className="text-xs font-bold tracking-widest uppercase opacity-60">Waiting for live...</span>
+                </div>
               </>
             )}
           </div>
@@ -180,7 +270,7 @@ export default function TipPage() {
                 <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} placeholder="Write something supportive..." className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
               </div>
 
-              <button type="submit" disabled={loading} className="w-full mt-auto bg-[#6D28D9] hover:bg-[#5b21b6] text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg shadow-purple-200 disabled:opacity-70">
+              <button type="submit" disabled={loading || isLoadingStreamer} className="w-full mt-auto bg-[#6D28D9] hover:bg-[#5b21b6] text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg shadow-purple-200 disabled:opacity-70">
                 {loading ? 'Initializing Engine...' : 'Initialize Payment'} <Zap size={18} fill="currentColor" />
               </button>
             </form>
@@ -188,5 +278,13 @@ export default function TipPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function TipsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6D28D9]"></div></div>}>
+      <TipsEngine />
+    </Suspense>
   );
 }

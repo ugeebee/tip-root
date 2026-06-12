@@ -42,6 +42,13 @@ func CreateTip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var streamerUPI, streamerName string
+	err := database.DB.QueryRow(context.Background(), "SELECT upi_id, display_name FROM streamers WHERE id = $1", req.StreamerID).Scan(&streamerUPI, &streamerName)
+	if err != nil {
+		http.Error(w, "Streamer not found or missing UPI ID", http.StatusNotFound)
+		return
+	}
+
 	query := `
 		INSERT INTO tips (streamer_id, client_key, name, message, amount, status)
 		VALUES ($1, $2, $3, $4, $5, 'PENDING')
@@ -53,7 +60,7 @@ func CreateTip(w http.ResponseWriter, r *http.Request) {
 	var status string
 	var isPaid bool
 
-	err := database.DB.QueryRow(context.Background(), query,
+	err = database.DB.QueryRow(context.Background(), query,
 		req.StreamerID, req.ClientKey, req.Name, req.Message, req.Amount,
 	).Scan(&status)
 
@@ -66,8 +73,7 @@ func CreateTip(w http.ResponseWriter, r *http.Request) {
 		isPaid = true
 	}
 
-	streamerVPA := "test@oksbi"
-	upiLink := fmt.Sprintf("upi://pay?pa=%s&pn=RootPay&am=%.2f&cu=INR&tn=%s", streamerVPA, req.Amount, req.ClientKey)
+	upiLink := fmt.Sprintf("upi://pay?pa=%s&pn=%s&am=%.2f&cu=INR&tn=%s", streamerUPI, streamerName, req.Amount, req.ClientKey)
 
 	res := CreateTipResponse{
 		UPIDeepLink: upiLink,

@@ -51,6 +51,7 @@ func main() {
 	}))
 
 	r.Route("/api", func(r chi.Router) {
+		r.Get("/streamer", handlers.GetStreamer)
 		r.Post("/tips", handlers.CreateTip)
 		r.Post("/webhooks/upi", server.handleWebhook)
 		r.Post("/support", handlers.SubmitSupportTicket)
