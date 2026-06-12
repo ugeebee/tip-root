@@ -21,7 +21,7 @@ export default function CommandCenter() {
       .finally(() => setLoading(false));
   }, []);
 
-  const tipUrl = `https://root.ugbhartariya.com/tip/${streamerId}`;
+  const tipUrl = `https://root.ugbhartariya.com/tips?streamerid=${streamerId}`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(tipUrl);
