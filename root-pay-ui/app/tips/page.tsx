@@ -19,7 +19,7 @@ interface StreamerData {
 function TipsEngine() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const streamerIDParam = searchParams.get('streamerID');
+  const streamerIDParam = searchParams.get('streamerid');
 
   const [streamerData, setStreamerData] = useState<StreamerData | null>(null);
   const [isLoadingStreamer, setIsLoadingStreamer] = useState(true);
@@ -35,8 +35,7 @@ function TipsEngine() {
   const presetAmounts = [50, 100, 250, 500, 1000];
   const BACKEND_URL = '/api';
 
-  // Fetch streamer data on load
-  useEffect(() => {
+    useEffect(() => {
     async function fetchStreamerData() {
       if (!streamerIDParam) {
         setIsLoadingStreamer(false);
