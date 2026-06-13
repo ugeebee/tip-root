@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, TrendingUp, IndianRupee, Trophy, Loader2, Tv, Video, Smartphone } from "lucide-react";
+import { Copy, Loader2, Tv, Video, Smartphone } from "lucide-react";
 
 export default function CommandCenter() {
   const [streamerId, setStreamerId] = useState<string>("........");
@@ -98,53 +98,7 @@ export default function CommandCenter() {
         </div>
       </div>
 
-      {/* Analytics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="rounded-xl bg-white/5 border border-white/10 p-6 backdrop-blur-md">
-          <div className="flex items-center gap-3 text-[#9f8b9d] mb-4">
-            <TrendingUp size={20} className="text-[#dec747]" />
-            <h3 className="font-medium">Today's Revenue</h3>
-          </div>
-          <p className="text-4xl font-bold text-white">₹4,500</p>
-        </div>
 
-        <div className="rounded-xl bg-white/5 border border-white/10 p-6 backdrop-blur-md">
-          <div className="flex items-center gap-3 text-[#9f8b9d] mb-4">
-            <IndianRupee size={20} className="text-[#fbabff]" />
-            <h3 className="font-medium">Total Tips</h3>
-          </div>
-          <p className="text-4xl font-bold text-white">24</p>
-        </div>
-
-        <div className="rounded-xl bg-white/5 border border-white/10 p-6 backdrop-blur-md">
-          <div className="flex items-center gap-3 text-[#9f8b9d] mb-4">
-            <Trophy size={20} className="text-[#c4abff]" />
-            <h3 className="font-medium">Largest Tip</h3>
-          </div>
-          <p className="text-4xl font-bold text-white">₹2,000</p>
-        </div>
-      </div>
-
-      {/* Recent Activity Feed */}
-      <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden backdrop-blur-md">
-        <div className="p-6 border-b border-white/10">
-          <h2 className="text-xl font-bold text-white">Recent Activity</h2>
-        </div>
-        <div className="divide-y divide-white/5">
-          <div className="p-6 hover:bg-white/[0.02] transition-colors flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#36003e] flex items-center justify-center border border-[#fbabff]/30 text-[#fbabff] font-bold">
-                A
-              </div>
-              <div>
-                <p className="text-white font-medium">Aryaman sent <span className="text-[#fbabff]">₹500</span></p>
-                <p className="text-[#9f8b9d] text-sm mt-1 italic">"First time watching, really vibes with the stream!"</p>
-              </div>
-            </div>
-            <span className="text-xs text-[#9f8b9d]">2 mins ago</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
