@@ -17,10 +17,9 @@ import (
 	"github.com/ugeebee/root-pay/backend/internal/models"
 )
 
-// OverlayHub manages active OBS browser sources
 type OverlayHub struct {
 	sync.RWMutex
-	clients map[string]chan string // Key: streamer_id
+	clients map[string]chan string
 }
 
 var Hub = &OverlayHub{
@@ -30,7 +29,7 @@ var Hub = &OverlayHub{
 func (h *OverlayHub) Register(streamerID string) chan string {
 	h.Lock()
 	defer h.Unlock()
-	ch := make(chan string, 10) // Buffer allows queueing
+	ch := make(chan string, 10)
 	h.clients[streamerID] = ch
 	return ch
 }
@@ -59,19 +58,16 @@ func main() {
 	nc, js := eventbus.Connect()
 	defer nc.Close()
 
-	// 1. Listen to NATS JetStream
 	_, err := js.Subscribe("tips.processed", func(m *nats.Msg) {
 		var event models.TipEvent
 		json.Unmarshal(m.Data, &event)
 
-		// THE SHIELD: Do not send to OBS if flagged!
 		if event.IsNSFW {
 			log.Printf("[OBS Engine] 🛡️ Blocked NSFW tip from screen: %s", event.ClientKey)
 			m.Ack()
 			return
 		}
 
-		// Push to the Streamer's OBS Hub
 		payload, _ := json.Marshal(map[string]interface{}{
 			"client_key": event.ClientKey,
 			"name":       event.Name,
@@ -82,14 +78,34 @@ func main() {
 		Hub.Publish(event.StreamerID, string(payload))
 		log.Printf("[OBS Engine] 🟢 Pushed safe tip to overlay for Streamer %s", event.StreamerID)
 
-		m.Ack() // Tell JetStream we successfully handled it
+		m.Ack()
 	}, nats.Durable("OBS_ENGINE_WORKER"), nats.ManualAck())
 
 	if err != nil {
 		log.Fatalf("JetStream Subscription failed: %v", err)
 	}
 
-	// 2. Start the HTTP Server for the Next.js Overlay
+	_, err = js.Subscribe("tips.approved", func(m *nats.Msg) {
+		var event models.TipEvent
+		json.Unmarshal(m.Data, &event)
+
+		payload, _ := json.Marshal(map[string]interface{}{
+			"client_key": event.ClientKey,
+			"name":       event.Name,
+			"amount":     event.Amount,
+			"message":    event.Message,
+		})
+
+		Hub.Publish(event.StreamerID, string(payload))
+		log.Printf("[OBS Engine] ✅ Pushed APPROVED tip to overlay for Streamer %s", event.StreamerID)
+
+		m.Ack()
+	}, nats.Durable("OBS_ENGINE_APPROVED_WORKER"), nats.ManualAck())
+
+	if err != nil {
+		log.Fatalf("JetStream Subscription to tips.approved failed: %v", err)
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(cors.Handler(cors.Options{
@@ -125,7 +141,6 @@ func serveOverlaySSE(w http.ResponseWriter, r *http.Request) {
 	msgChan := Hub.Register(streamerID)
 	defer Hub.Unregister(streamerID)
 
-	// Keep alive ticker to prevent OBS from closing the connection
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
