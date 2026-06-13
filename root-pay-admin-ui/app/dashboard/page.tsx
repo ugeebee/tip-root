@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, TrendingUp, IndianRupee, Trophy, Loader2, Youtube, Video, Smartphone } from "lucide-react";
+import { Copy, TrendingUp, IndianRupee, Trophy, Loader2, Tv, Video, Smartphone } from "lucide-react";
 
 export default function CommandCenter() {
   const [streamerId, setStreamerId] = useState<string>("........");
@@ -61,7 +61,7 @@ export default function CommandCenter() {
         <div className="rounded-xl bg-white/5 border border-white/10 p-5 backdrop-blur-md flex items-center justify-between transition-all hover:bg-white/10">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
-              <Youtube size={20} className="text-[#ff0000]" />
+              <Tv size={20} className="text-[#ff0000]" />
             </div>
             <div>
               <h3 className="font-medium text-white">YouTube</h3>
