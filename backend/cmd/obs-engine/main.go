@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"github.com/nats-io/nats.go"
+	"github.com/ugeebee/root-pay/backend/internal/database"
 	"github.com/ugeebee/root-pay/backend/internal/eventbus"
 	"github.com/ugeebee/root-pay/backend/internal/models"
 )
@@ -54,6 +55,8 @@ func (h *OverlayHub) Publish(streamerID string, payload string) {
 func main() {
 	godotenv.Load(".env")
 	godotenv.Load("backend/.env")
+
+	database.InitDB()
 
 	nc, js := eventbus.Connect()
 	defer nc.Close()
@@ -109,8 +112,9 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"http://localhost:3000", "https://xyz.com"},
-		AllowedMethods: []string{"GET"},
+		AllowedOrigins: []string{"http://localhost:3000", "https://adminroot.ugbhartariya.com"},
+		AllowedMethods: []string{"GET", "OPTIONS"},
+		AllowedHeaders: []string{"Accept", "Content-Type"},
 	}))
 
 	r.Get("/api/overlay/stream", serveOverlaySSE)
@@ -120,18 +124,38 @@ func main() {
 }
 
 func serveOverlaySSE(w http.ResponseWriter, r *http.Request) {
+	// Extract BOTH parameters from the URL
 	streamerID := r.URL.Query().Get("streamer_id")
-	if streamerID == "" {
-		http.Error(w, "Missing streamer_id", http.StatusBadRequest)
+	token := r.URL.Query().Get("token")
+
+	if streamerID == "" || token == "" {
+		http.Error(w, "Missing streamer_id or token parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Verify against Database
+	var dbStreamerID string
+	err := database.DB.QueryRow(
+		r.Context(),
+		"SELECT id FROM streamers WHERE overlay_token = $1 AND id = $2",
+		token,
+		streamerID,
+	).Scan(&dbStreamerID)
+
+	if err != nil {
+		log.Printf("Unauthorized access attempt for streamer %s", streamerID)
+		http.Error(w, "Unauthorized: Invalid token for this streamer", http.StatusUnauthorized)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no")
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
+		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
 		return
 	}
 
@@ -144,7 +168,7 @@ func serveOverlaySSE(w http.ResponseWriter, r *http.Request) {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
-	fmt.Printf("🎥 OBS Connected for Streamer: %s\n", streamerID)
+	fmt.Printf("🎥 OBS Connected securely for Streamer: %s\n", streamerID)
 
 	for {
 		select {

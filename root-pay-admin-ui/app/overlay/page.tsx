@@ -14,19 +14,26 @@ interface TipAlert {
 function OverlayEngine() {
   const searchParams = useSearchParams();
   const streamerId = searchParams.get('streamer_id');
+  const token = searchParams.get('token'); // NEW: Extract the token
 
   const [queue, setQueue] = useState<TipAlert[]>([]);
   const [currentAlert, setCurrentAlert] = useState<TipAlert | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  // 1. Connect to the Go OBS Engine
+  // 1. Connect to the Secure Go OBS Engine
   useEffect(() => {
-    if (!streamerId) return;
+    // NEW: Wait for BOTH parameters
+    if (!streamerId || !token) return;
 
-    // Connect to Port 8083 (The OBS Engine)
-    const eventSource = new EventSource(`/api/overlay/stream?streamer_id=${streamerId}`);
+    // NEW: Connect using the full secure URL with the token
+    const eventSource = new EventSource(
+      `https://adminroot.ugbhartariya.com/api/overlay/stream?streamer_id=${streamerId}&token=${token}`
+    );
 
     eventSource.onmessage = (event) => {
+      // NEW: Ignore heartbeat messages so it doesn't crash the JSON parser
+      if (event.data === ": heartbeat") return;
+
       try {
         const newTip = JSON.parse(event.data);
         // Add incoming tips to the queue
@@ -36,8 +43,12 @@ function OverlayEngine() {
       }
     };
 
+    eventSource.onerror = (error) => {
+      console.error("SSE Connection dropped. Reconnecting...", error);
+    };
+
     return () => eventSource.close();
-  }, [streamerId]);
+  }, [streamerId, token]);
 
   // 2. The Queue Manager (Plays animations sequentially)
   useEffect(() => {
@@ -60,8 +71,9 @@ function OverlayEngine() {
     }
   }, [queue, currentAlert]);
 
-  if (!streamerId) {
-    return <div className="text-white p-4 font-mono">⚠️ Missing streamer_id parameter</div>;
+  // NEW: Warn if the URL is missing the security token
+  if (!streamerId || !token) {
+    return <div className="text-white p-4 font-mono">⚠️ Missing streamer_id or security token parameter</div>;
   }
 
   return (
