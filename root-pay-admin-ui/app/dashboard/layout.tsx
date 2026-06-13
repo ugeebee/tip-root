@@ -1,11 +1,12 @@
 'use client';
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { LayoutDashboard, MonitorPlay, Table2, Settings, LogOut } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     try {
@@ -25,23 +26,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="w-64 fixed h-full border-r border-white/10 bg-[#131315]/80 backdrop-blur-xl flex flex-col z-20">
         <div className="p-6">
           <div className="font-bold text-transparent bg-clip-text bg-gradient-to-br from-[#fbabff] to-[#d0bcff] text-2xl tracking-tight">
-            Root-Pay
+            Tip Root
           </div>
         </div>
         <nav className="flex-1 px-4 space-y-2 mt-4">
-          <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 text-[#fbabff] bg-white/5 rounded-lg border border-white/5 font-medium transition-colors">
+          <Link href="/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${pathname === '/dashboard' ? 'text-[#fbabff] bg-white/5 border border-white/5' : 'text-[#9f8b9d] hover:text-[#fbabff] hover:bg-white/5'}`}>
             <LayoutDashboard size={20} />
             Command Center
           </Link>
-          <Link href="/dashboard/overlay" className="flex items-center gap-3 px-4 py-3 text-[#9f8b9d] hover:text-[#fbabff] hover:bg-white/5 rounded-lg font-medium transition-colors">
+          <Link href="/dashboard/overlay" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${pathname === '/dashboard/overlay' ? 'text-[#fbabff] bg-white/5 border border-white/5' : 'text-[#9f8b9d] hover:text-[#fbabff] hover:bg-white/5'}`}>
             <MonitorPlay size={20} />
             OBS Alerts
           </Link>
-          <Link href="/dashboard/ledger" className="flex items-center gap-3 px-4 py-3 text-[#9f8b9d] hover:text-[#fbabff] hover:bg-white/5 rounded-lg font-medium transition-colors">
+          <Link href="/dashboard/ledger" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${pathname === '/dashboard/ledger' ? 'text-[#fbabff] bg-white/5 border border-white/5' : 'text-[#9f8b9d] hover:text-[#fbabff] hover:bg-white/5'}`}>
             <Table2 size={20} />
             Ledger
           </Link>
-          <Link href="/dashboard/settings" className="flex items-center gap-3 px-4 py-3 text-[#9f8b9d] hover:text-[#fbabff] hover:bg-white/5 rounded-lg font-medium transition-colors">
+          <Link href="/dashboard/settings" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${pathname === '/dashboard/settings' ? 'text-[#fbabff] bg-white/5 border border-white/5' : 'text-[#9f8b9d] hover:text-[#fbabff] hover:bg-white/5'}`}>
             <Settings size={20} />
             Settings
           </Link>
@@ -52,8 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               U
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-bold text-white truncate">Streamer</p>
-              <p className="text-xs text-[#9f8b9d] truncate">Verified Partner</p>
+              <p className="text-sm font-bold text-white truncate">Verified Streamer</p>
             </div>
             <button 
               onClick={handleLogout}

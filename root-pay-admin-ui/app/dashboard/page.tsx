@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, TrendingUp, IndianRupee, Trophy, Loader2 } from "lucide-react";
+import { Copy, TrendingUp, IndianRupee, Trophy, Loader2, Youtube, Video, Smartphone } from "lucide-react";
 
 export default function CommandCenter() {
   const [streamerId, setStreamerId] = useState<string>("........");
@@ -53,6 +53,48 @@ export default function CommandCenter() {
             <Copy size={16} />
             Copy Link
           </button>
+        </div>
+      </div>
+
+      {/* Connectivity Status */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="rounded-xl bg-white/5 border border-white/10 p-5 backdrop-blur-md flex items-center justify-between transition-all hover:bg-white/10">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+              <Youtube size={20} className="text-[#ff0000]" />
+            </div>
+            <div>
+              <h3 className="font-medium text-white">YouTube</h3>
+              <p className="text-xs text-[#9f8b9d]">Stream source</p>
+            </div>
+          </div>
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-400 border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]">Disconnected</span>
+        </div>
+
+        <div className="rounded-xl bg-white/5 border border-white/10 p-5 backdrop-blur-md flex items-center justify-between transition-all hover:bg-white/10">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+              <Video size={20} className="text-[#fbabff]" />
+            </div>
+            <div>
+              <h3 className="font-medium text-white">OBS</h3>
+              <p className="text-xs text-[#9f8b9d]">Alerts & overlays</p>
+            </div>
+          </div>
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">Connected</span>
+        </div>
+
+        <div className="rounded-xl bg-white/5 border border-white/10 p-5 backdrop-blur-md flex items-center justify-between transition-all hover:bg-white/10">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+              <Smartphone size={20} className="text-[#c4abff]" />
+            </div>
+            <div>
+              <h3 className="font-medium text-white">Tip Root SPC App</h3>
+              <p className="text-xs text-[#9f8b9d]">Mobile controller</p>
+            </div>
+          </div>
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-400 border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]">Disconnected</span>
         </div>
       </div>
 
