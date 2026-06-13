@@ -1,18 +1,121 @@
 'use client';
 
-import { useState } from 'react';
-import { Camera, Eye, EyeOff, Copy } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Camera, Eye, EyeOff, Copy, Loader2 } from 'lucide-react';
 
 export default function SettingsPage() {
+    // UI States
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isRotating, setIsRotating] = useState(false);
+
+    // Form States
+    const [displayName, setDisplayName] = useState('');
+    const [upiId, setUpiId] = useState('');
+    const [supportTitle, setSupportTitle] = useState('');
+    const [supportTotal, setSupportTotal] = useState<number | string>('');
+    const [supportCompleted, setSupportCompleted] = useState<number | string>('');
+
+    // Token States
+    const [overlayToken, setOverlayToken] = useState('••••••••••••••••');
     const [showToken, setShowToken] = useState(false);
-    const [overlayToken, setOverlayToken] = useState('root_token_a7b8c9d0e1f2g3h4i5j6'); // Placeholder for database token
     const [isCopied, setIsCopied] = useState(false);
+
+    // Fetch Initial Data on Mount
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                // Fetch Profile Data
+                const settingsRes = await fetch('https://adminroot.ugbhartariya.com/api/dashboard/settings', {
+                    credentials: 'include'
+                });
+                if (settingsRes.ok) {
+                    const data = await settingsRes.json();
+                    setDisplayName(data.display_name);
+                    setUpiId(data.upi_id);
+                    setSupportTitle(data.support_title);
+                    setSupportTotal(data.support_total);
+                    setSupportCompleted(data.support_completed);
+                }
+
+                // Fetch Secure Token
+                const tokenRes = await fetch('https://adminroot.ugbhartariya.com/api/dashboard/token', {
+                    credentials: 'include'
+                });
+                if (tokenRes.ok) {
+                    const tokenData = await tokenRes.json();
+                    setOverlayToken(tokenData.overlay_token);
+                }
+            } catch (error) {
+                console.error("Failed to load settings:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchSettings();
+    }, []);
+
+    const handleSaveSettings = async () => {
+        setIsSaving(true);
+        try {
+            const res = await fetch('https://adminroot.ugbhartariya.com/api/dashboard/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    display_name: displayName,
+                    upi_id: upiId,
+                    support_title: supportTitle,
+                    support_total: Number(supportTotal),
+                    support_completed: Number(supportCompleted)
+                })
+            });
+            if (!res.ok) throw new Error("Failed to save");
+            alert("Settings saved successfully!");
+        } catch (error) {
+            console.error("Error saving settings:", error);
+            alert("Failed to save settings. Please try again.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleRotateToken = async () => {
+        if (!confirm("Are you sure? This will break your existing OBS browser sources immediately.")) return;
+
+        setIsRotating(true);
+        try {
+            const res = await fetch('https://adminroot.ugbhartariya.com/api/dashboard/token/rotate', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setOverlayToken(data.overlay_token);
+                alert("Token rotated successfully! Please update OBS.");
+            }
+        } catch (error) {
+            console.error("Error rotating token:", error);
+            alert("Failed to rotate token.");
+        } finally {
+            setIsRotating(false);
+        }
+    };
 
     const handleCopyToken = () => {
         navigator.clipboard.writeText(overlayToken);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <Loader2 className="w-8 h-8 text-[#fbabff] animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -38,7 +141,7 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-6">
                         <div className="relative group/avatar cursor-pointer">
                             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#fbabff] to-[#571bc1] flex items-center justify-center text-white font-bold text-3xl shadow-[0_0_20px_rgba(87,27,193,0.3)]">
-                                U
+                                {displayName ? displayName.charAt(0).toUpperCase() : 'U'}
                             </div>
                             <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                 <Camera size={24} className="text-white" />
@@ -59,6 +162,8 @@ export default function SettingsPage() {
                             <label className="text-xs font-bold tracking-wider uppercase text-[#9f8b9d]">Web Display Name</label>
                             <input
                                 type="text"
+                                value={displayName}
+                                onChange={(e) => setDisplayName(e.target.value)}
                                 placeholder="e.g. ProStreamer99"
                                 className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#fbabff]/50 focus:ring-1 focus:ring-[#fbabff]/50 transition-all shadow-inner"
                             />
@@ -67,6 +172,8 @@ export default function SettingsPage() {
                             <label className="text-xs font-bold tracking-wider uppercase text-[#9f8b9d]">UPI ID</label>
                             <input
                                 type="text"
+                                value={upiId}
+                                onChange={(e) => setUpiId(e.target.value)}
                                 placeholder="yourname@upi"
                                 className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#fbabff]/50 focus:ring-1 focus:ring-[#fbabff]/50 transition-all shadow-inner"
                             />
@@ -79,6 +186,8 @@ export default function SettingsPage() {
                             <label className="text-xs font-bold tracking-wider uppercase text-[#9f8b9d]">Goal Title</label>
                             <input
                                 type="text"
+                                value={supportTitle}
+                                onChange={(e) => setSupportTitle(e.target.value)}
                                 placeholder="New PC Build"
                                 className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#fbabff]/50 focus:ring-1 focus:ring-[#fbabff]/50 transition-all shadow-inner"
                             />
@@ -87,6 +196,8 @@ export default function SettingsPage() {
                             <label className="text-xs font-bold tracking-wider uppercase text-[#9f8b9d]">Goal Target (₹)</label>
                             <input
                                 type="number"
+                                value={supportTotal}
+                                onChange={(e) => setSupportTotal(e.target.value)}
                                 placeholder="50000"
                                 className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#fbabff]/50 focus:ring-1 focus:ring-[#fbabff]/50 transition-all shadow-inner"
                             />
@@ -95,6 +206,8 @@ export default function SettingsPage() {
                             <label className="text-xs font-bold tracking-wider uppercase text-[#9f8b9d]">Amount Raised (₹)</label>
                             <input
                                 type="number"
+                                value={supportCompleted}
+                                onChange={(e) => setSupportCompleted(e.target.value)}
                                 placeholder="0"
                                 className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#fbabff]/50 focus:ring-1 focus:ring-[#fbabff]/50 transition-all shadow-inner"
                             />
@@ -103,8 +216,13 @@ export default function SettingsPage() {
 
                     {/* Action */}
                     <div className="flex justify-end pt-4">
-                        <button className="bg-gradient-to-r from-[#fbabff] to-[#571bc1] text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 active:scale-95 transition-all shadow-[0_0_20px_rgba(87,27,193,0.4)]">
-                            Save Changes
+                        <button
+                            onClick={handleSaveSettings}
+                            disabled={isSaving}
+                            className="bg-gradient-to-r from-[#fbabff] to-[#571bc1] text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 active:scale-95 transition-all shadow-[0_0_20px_rgba(87,27,193,0.4)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isSaving ? "Saving..." : "Save Changes"}
                         </button>
                     </div>
                 </div>
@@ -154,8 +272,13 @@ export default function SettingsPage() {
                             <p className="font-semibold text-red-400 mb-1">Danger Zone</p>
                             <p className="text-sm text-[#9f8b9d]">Rotating your token will break existing OBS sources until updated.</p>
                         </div>
-                        <button className="px-6 py-3 border border-red-500/30 text-red-400 rounded-xl font-bold hover:bg-red-500/10 transition-all active:scale-95">
-                            Rotate Token
+                        <button
+                            onClick={handleRotateToken}
+                            disabled={isRotating}
+                            className="px-6 py-3 border border-red-500/30 text-red-400 rounded-xl font-bold hover:bg-red-500/10 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {isRotating && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isRotating ? "Rotating..." : "Rotate Token"}
                         </button>
                     </div>
                 </div>
