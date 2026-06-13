@@ -32,6 +32,14 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+type LedgerEntry struct {
+	ClientKey string  `json:"client_key"`
+	Name      string  `json:"name"`
+	Amount    float64 `json:"amount"`
+	Message   string  `json:"message"`
+	CreatedAt string  `json:"created_at"`
+}
+
 func main() {
 	godotenv.Load()
 	godotenv.Load("../.env")
@@ -59,7 +67,7 @@ func main() {
 
 	r.Get("/api/dashboard/updates/stream", verifyAccessMiddleware(streamDashboardUpdates))
 	r.Post("/api/dashboard/tips/approve", verifyAccessMiddleware(approveTipHandler))
-
+	r.Get("/api/dashboard/ledger", verifyAccessMiddleware(getLedgerHandler))
 	log.Println("Dashboard Updates Microservice live on :8086...")
 	log.Fatal(http.ListenAndServe(":8086", r))
 }
@@ -158,4 +166,41 @@ func verifyAccessMiddleware(next func(w http.ResponseWriter, r *http.Request, st
 		claims := token.Claims.(*Claims)
 		next(w, r, claims.StreamerID)
 	}
+}
+
+func getLedgerHandler(w http.ResponseWriter, r *http.Request, streamerID string) {
+	query := `
+		SELECT client_key, name, amount, message, created_at 
+		FROM tips 
+		WHERE streamer_id = $1 
+		  AND status = 'PAID'
+		  AND created_at >= date_trunc('month', CURRENT_DATE)
+		ORDER BY created_at DESC
+	`
+	rows, err := dbPool.Query(r.Context(), query, streamerID)
+	if err != nil {
+		http.Error(w, "Failed to fetch ledger data", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var entries []LedgerEntry
+	for rows.Next() {
+		var entry LedgerEntry
+		var timestamp time.Time
+
+		if err := rows.Scan(&entry.ClientKey, &entry.Name, &entry.Amount, &entry.Message, &timestamp); err != nil {
+			continue
+		}
+
+		entry.CreatedAt = timestamp.Format("Jan 02, 2006 - 15:04")
+		entries = append(entries, entry)
+	}
+
+	if entries == nil {
+		entries = []LedgerEntry{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(entries)
 }
