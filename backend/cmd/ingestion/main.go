@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -62,6 +63,14 @@ func main() {
 }
 
 func (s *IngestionServer) handleWebhook(w http.ResponseWriter, r *http.Request) {
+	urlToken := r.URL.Query().Get("token")
+	expectedToken := os.Getenv("WEBHOOK_SECRET_TOKEN")
+	if urlToken == "" || urlToken != expectedToken {
+		log.Printf("[Ingestion] ⚠️ Unauthorized webhook attempt. Token provided: %s", urlToken)
+		http.Error(w, "Unauthorized: Invalid or missing token", http.StatusUnauthorized)
+		return
+	}
+
 	var req IncomingPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid payload", http.StatusBadRequest)
