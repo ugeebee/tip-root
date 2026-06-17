@@ -39,11 +39,11 @@ func main() {
 		_, err = dbPool.Exec(context.Background(), query, event.Amount, event.StreamerID)
 
 		if err != nil {
-			log.Printf("❌ Failed to update support for streamer %s: %v", event.StreamerID, err)
+			log.Printf("Failed to update support for streamer %s: %v", event.StreamerID, err)
 			return
 		}
 
-		log.Printf("✅ Added ₹%.2f to streamer %s's support total", event.Amount, event.StreamerID)
+		log.Printf("Added ₹%.2f to streamer %s's support total", event.Amount, event.StreamerID)
 
 		msg.Ack()
 

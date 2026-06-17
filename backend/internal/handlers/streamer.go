@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/ugeebee/root-pay/backend/internal/database"
@@ -16,11 +18,12 @@ type SupportStats struct {
 }
 
 type StreamerResponse struct {
-	StreamerID  string       `json:"streamerID"`
-	StreamerTag string       `json:"streamer_tag"`
-	Support     SupportStats `json:"support"`
-	LiveLink    string       `json:"live_link"`
-	UpiID       string       `json:"upi_id"`
+	StreamerID   string       `json:"streamerID"`
+	StreamerTag  string       `json:"streamer_tag"`
+	Support      SupportStats `json:"support"`
+	LiveLink     string       `json:"live_link"`
+	UpiID        string       `json:"upi_id"`
+	MinTipAmount float64      `json:"min_tip_amount"`
 }
 
 func GetStreamer(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +58,12 @@ func GetStreamer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	minAmountStr := os.Getenv("MIN_AMOUNT")
+	minAmount, parseErr := strconv.ParseFloat(minAmountStr, 64)
+	if parseErr != nil || minAmount <= 0 {
+		minAmount = 40.0 // Default fallback
+	}
+
 	resp := StreamerResponse{
 		StreamerID:  streamerID,
 		StreamerTag: tag,
@@ -63,8 +72,9 @@ func GetStreamer(w http.ResponseWriter, r *http.Request) {
 			Total:     total,
 			Completed: completed,
 		},
-		LiveLink: liveLink,
-		UpiID:    upiID,
+		LiveLink:     liveLink,
+		UpiID:        upiID,
+		MinTipAmount: minAmount,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

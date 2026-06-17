@@ -14,6 +14,7 @@ interface StreamerData {
     completed: number;
   };
   live_link: string;
+  min_tip_amount: number;
 }
 
 function TipsEngine() {
@@ -76,6 +77,12 @@ function TipsEngine() {
 
     if (!name || !finalAmount) {
       setError('Name and Amount are required.');
+      return;
+    }
+
+    const minimumAllowed = streamerData?.min_tip_amount || 40;
+    if (finalAmount < minimumAllowed) {
+      setError(`The minimum support amount is ₹${minimumAllowed}.`);
       return;
     }
 

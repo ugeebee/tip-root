@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/ugeebee/root-pay/backend/internal/database"
@@ -31,6 +33,17 @@ func CreateTip(w http.ResponseWriter, r *http.Request) {
 	var req CreateTipRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	minAmountStr := os.Getenv("MIN_AMOUNT")
+	minAmount, parseErr := strconv.ParseFloat(minAmountStr, 64)
+	if parseErr != nil || minAmount <= 0 {
+		minAmount = 40
+	}
+
+	if req.Amount < minAmount {
+		http.Error(w, fmt.Sprintf("Minimum tip amount is ₹%.2f", minAmount), http.StatusBadRequest)
 		return
 	}
 
