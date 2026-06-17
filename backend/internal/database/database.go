@@ -76,3 +76,10 @@ func UpdateNSFWFlag(clientKey string, isNSFW bool) error {
 	_, err := DB.Exec(context.Background(), query, isNSFW, clientKey)
 	return err
 }
+
+func AddSupportToStreamer(streamerID string, amount float64) error {
+	query := `UPDATE streamers SET support_completed = support_completed + $1 WHERE id = $2`
+
+	_, err := DB.Exec(context.Background(), query, amount, streamerID)
+	return err
+}
