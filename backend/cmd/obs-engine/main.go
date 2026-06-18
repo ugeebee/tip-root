@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/ugeebee/root-pay/backend/internal/database"
 	"github.com/ugeebee/root-pay/backend/internal/eventbus"
+	"github.com/ugeebee/root-pay/backend/internal/logger"
 	"github.com/ugeebee/root-pay/backend/internal/models"
 )
 
@@ -53,6 +55,7 @@ func (h *OverlayHub) Publish(streamerID string, payload string) {
 }
 
 func main() {
+	logger.InitLogger()
 	godotenv.Load(".env")
 	godotenv.Load("backend/.env")
 
@@ -119,7 +122,7 @@ func main() {
 
 	r.Get("/api/overlay/stream", serveOverlaySSE)
 
-	log.Println("🎬 OBS Engine listening for Browser Sources on :8083...")
+	slog.Info("OBS Engine live", slog.String("port", "8083"))
 	log.Fatal(http.ListenAndServe(":8083", r))
 }
 

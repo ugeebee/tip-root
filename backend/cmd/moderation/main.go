@@ -12,10 +12,12 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/ugeebee/root-pay/backend/internal/discord"
 	"github.com/ugeebee/root-pay/backend/internal/eventbus"
+	"github.com/ugeebee/root-pay/backend/internal/logger"
 	"github.com/ugeebee/root-pay/backend/internal/models"
 )
 
 func main() {
+	logger.InitLogger()
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, relying on system environment variables")
 	}

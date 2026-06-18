@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/nats-io/nats.go"
 	"github.com/ugeebee/root-pay/backend/internal/eventbus"
+	"github.com/ugeebee/root-pay/backend/internal/logger"
 	"github.com/ugeebee/root-pay/backend/internal/models"
 )
 
@@ -41,6 +43,7 @@ type LedgerEntry struct {
 }
 
 func main() {
+	logger.InitLogger()
 	godotenv.Load()
 	godotenv.Load("../.env")
 
@@ -68,7 +71,7 @@ func main() {
 	r.Get("/api/dashboard/updates/stream", verifyAccessMiddleware(streamDashboardUpdates))
 	r.Post("/api/dashboard/tips/approve", verifyAccessMiddleware(approveTipHandler))
 	r.Get("/api/dashboard/ledger", verifyAccessMiddleware(getLedgerHandler))
-	log.Println("Dashboard Updates Microservice live on :8086...")
+	slog.Info("Dashboard Updates Microservice live", slog.String("port", "8086"))
 	log.Fatal(http.ListenAndServe(":8086", r))
 }
 

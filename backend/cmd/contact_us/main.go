@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/ugeebee/root-pay/backend/internal/logger"
 )
 
 var db *sql.DB
@@ -96,13 +98,14 @@ func handleContactPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	logger.InitLogger()
 	initDB()
 	defer db.Close()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/contact", handleContactPost)
 
-	log.Println("🚀 Contact Microservice running on port 8085")
+	slog.Info("Contact Microservice running", slog.String("port", "8085"))
 	if err := http.ListenAndServe(":8085", mux); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}

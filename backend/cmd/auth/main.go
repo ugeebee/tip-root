@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"math/big"
 	"net/http"
 	"os"
@@ -23,6 +24,7 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/discord"
+	"github.com/ugeebee/root-pay/backend/internal/logger"
 )
 
 var (
@@ -45,6 +47,7 @@ type PendingClaims struct {
 }
 
 func main() {
+	logger.InitLogger()
 	if err := godotenv.Load(); err != nil {
 		log.Println("Warning: No .env file found, relying on environment variables")
 	}
@@ -104,7 +107,7 @@ func main() {
 		fmt.Fprintf(w, "Authenticated secure statistics payload for Streamer: %s", streamerID)
 	}))
 
-	fmt.Println("Auth Gateway microservice streaming live on :8084")
+	slog.Info("Auth Gateway microservice streaming live", slog.String("port", "8084"))
 	log.Fatal(http.ListenAndServe(":8084", r))
 }
 

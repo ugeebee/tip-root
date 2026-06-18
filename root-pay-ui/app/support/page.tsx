@@ -160,10 +160,16 @@ function SupportEngine() {
                 <div className="flex flex-col items-center justify-center py-8 text-center animate-in zoom-in duration-300 bg-emerald-50 rounded-2xl border border-emerald-100">
                   <CheckCircle2 size={56} className="text-emerald-500 mb-4" />
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Ticket Submitted Successfully</h3>
-                  <p className="text-gray-600 mb-6 max-w-sm">Our moderation team has received your ticket and will investigate the transaction shortly.</p>
-                  <Link href="/" className="px-6 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 font-semibold rounded-xl transition-colors shadow-sm">
-                    Return to Stream
-                  </Link>
+                  <p className="text-gray-600 mb-6 max-w-sm">
+                    Our moderation team has received your ticket and will investigate the transaction shortly.
+                  </p>
+                  {/* Replaced Link with a button using router.back() */}
+                  <button 
+                    onClick={() => router.back()} 
+                    className="px-6 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 font-semibold rounded-xl transition-colors shadow-sm"
+                  >
+                    Go Back
+                  </button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6 max-w-lg mx-auto">

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/ugeebee/root-pay/backend/internal/database"
 	"github.com/ugeebee/root-pay/backend/internal/eventbus"
 	"github.com/ugeebee/root-pay/backend/internal/handlers"
+	"github.com/ugeebee/root-pay/backend/internal/logger"
 	"github.com/ugeebee/root-pay/backend/internal/models"
 
 	goaway "github.com/TwiN/go-away"
@@ -30,6 +32,7 @@ type IncomingPayload struct {
 }
 
 func main() {
+	logger.InitLogger()
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, relying on system environment variables")
 	}
@@ -42,7 +45,16 @@ func main() {
 	defer server.nc.Close()
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			slog.Info("API Request",
+				slog.String("method", r.Method),
+				slog.String("path", r.URL.Path),
+				slog.String("ip", r.RemoteAddr),
+			)
+			next.ServeHTTP(w, r)
+		})
+	})
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://xyz.com"},
@@ -58,7 +70,7 @@ func main() {
 		r.Post("/support", handlers.SubmitSupportTicket)
 	})
 
-	log.Println("Ingestion API live on :8081")
+	slog.Info("Ingestion API live", slog.String("port", "8081"))
 	log.Fatal(http.ListenAndServe(":8081", r))
 }
 

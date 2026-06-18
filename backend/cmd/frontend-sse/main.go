@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,11 +12,13 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/ugeebee/root-pay/backend/internal/eventbus"
 	"github.com/ugeebee/root-pay/backend/internal/handlers"
+	"github.com/ugeebee/root-pay/backend/internal/logger"
 	"github.com/ugeebee/root-pay/backend/internal/models"
 	"github.com/ugeebee/root-pay/backend/internal/sse"
 )
 
 func main() {
+	logger.InitLogger()
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, relying on system environment variables")
 	}
@@ -46,6 +49,6 @@ func main() {
 
 	r.Get("/api/stream", handlers.SSEWait)
 
-	log.Println("Frontend SSE Service listening for browser connections on :8082...")
+	slog.Info("Frontend SSE Service live", slog.String("port", "8082"))
 	log.Fatal(http.ListenAndServe(":8082", r))
 }
