@@ -115,7 +115,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"http://localhost:3000", "https://adminroot.ugbhartariya.com"},
+		AllowedOrigins: []string{"https://streamer.tip-root.in"},
 		AllowedMethods: []string{"GET", "OPTIONS"},
 		AllowedHeaders: []string{"Accept", "Content-Type"},
 	}))
@@ -127,7 +127,6 @@ func main() {
 }
 
 func serveOverlaySSE(w http.ResponseWriter, r *http.Request) {
-	// Extract BOTH parameters from the URL
 	streamerID := r.URL.Query().Get("streamer_id")
 	token := r.URL.Query().Get("token")
 
@@ -136,7 +135,6 @@ func serveOverlaySSE(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify against Database
 	var dbStreamerID string
 	err := database.DB.QueryRow(
 		r.Context(),

@@ -44,7 +44,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"http://localhost:3000", "https://xyz.com"},
+		AllowedOrigins: []string{"https://tip-root.in"},
 	}))
 
 	r.Get("/api/stream", handlers.SSEWait)

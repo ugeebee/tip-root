@@ -85,7 +85,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://root.ugbhartariya.com"},
+		AllowedOrigins:   []string{"https://streamer.tip-root.in"},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization"},
 		AllowCredentials: true,
@@ -138,7 +138,7 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Token provisioning failed", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, "https://adminroot.ugbhartariya.com/dashboard", http.StatusFound)
+		http.Redirect(w, r, "https://streamer.tip-root.in/dashboard", http.StatusFound)
 		return
 	}
 
@@ -172,7 +172,7 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 			MaxAge:   15 * 60,
 		})
 
-		http.Redirect(w, r, "https://adminroot.ugbhartariya.com/claim", http.StatusFound)
+		http.Redirect(w, r, "https://streamer.tip-root.in/claim", http.StatusFound)
 		return
 	}
 

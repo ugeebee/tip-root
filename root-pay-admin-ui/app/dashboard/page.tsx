@@ -14,7 +14,7 @@ export default function CommandCenter() {
 
   useEffect(() => {
     // 1. Fetch Secure Streamer Statistics & ID
-    fetch("https://adminroot.ugbhartariya.com/api/dashboard/stats")
+    fetch("https://streamer.tip-root.in/api/dashboard/stats")
       .then(async (res) => {
         if (!res.ok) throw new Error("Unauthorized context handshake");
         const data = await res.text();
@@ -24,7 +24,7 @@ export default function CommandCenter() {
       .catch((err) => console.error("Could not fetch secure metric claims:", err));
 
     // 2. Fetch Secure Overlay Token for the Widget link
-    fetch("https://adminroot.ugbhartariya.com/api/dashboard/token", { credentials: "include" })
+    fetch("https://streamer.tip-root.in/api/dashboard/token", { credentials: "include" })
       .then(async (res) => {
         if (res.ok) {
           const tokenData = await res.json();
@@ -35,10 +35,10 @@ export default function CommandCenter() {
       .finally(() => setLoading(false));
   }, []);
 
-  const tipUrl = `https://root.ugbhartariya.com/tips?streamerid=${streamerId}`;
+  const tipUrl = `https://tip-root.in/tips?streamerid=${streamerId}`;
   
   // The official URL that the streamer will paste into OBS Studio
-  const obsWidgetUrl = `https://adminroot.ugbhartariya.com/overlay?streamer_id=${streamerId}&token=${overlayToken}`;
+  const obsWidgetUrl = `https://streamer.tip-root.in/overlay?streamer_id=${streamerId}&token=${overlayToken}`;
 
   const copyToClipboard = (text: string, setCopiedState: (v: boolean) => void) => {
     navigator.clipboard.writeText(text);

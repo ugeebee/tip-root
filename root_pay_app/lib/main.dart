@@ -23,7 +23,7 @@ void callbackDispatcher() {
     }
 
     const String goServerUrl =
-        "https://root.ugbhartariya.com/api/webhooks/upi?token=115663a5722f2836b96d120c23e59970"; //TODO- rotate token
+        "https://tip-root.in/api/webhooks/upi?token=115663a5722f2836b96d120c23e59970"; //TODO- rotate token
 
     for (String key in unackedKeys) {
       try {
@@ -90,7 +90,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _hasPermission = false;
   final String _goServerUrl =
-      "https://root.ugbhartariya.com/api/webhooks/upi?token=115663a5722f2836b96d120c23e59970"; //TODO- rotate token
+      "https://tip-root.in/api/webhooks/upi?token=115663a5722f2836b96d120c23e59970"; //TODO- rotate token
 
   final List<String> _targetPackages = [
     "com.google.android.apps.nbu.paisa.user",

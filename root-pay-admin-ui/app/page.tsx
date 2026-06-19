@@ -50,10 +50,10 @@ export default function Home() {
       <footer className="w-full bg-transparent flex flex-col md:flex-row justify-between items-center px-12 py-8 max-w-[1280px] mx-auto text-sm text-[#9f8b9d]">
         <div>© 2026 Tip Root. All rights reserved.</div>
         <div className="flex gap-6 mt-4 md:mt-0 flex-wrap justify-center md:justify-end">
-          <a href="https://root.ugbhartariya.com/contact" className="hover:text-white transition-colors">Contact Us</a>
-          <a href="https://root.ugbhartariya.com/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
-          <a href="https://root.ugbhartariya.com/terms" className="hover:text-white transition-colors">Terms of Service</a>
-          <a href="https://root.ugbhartariya.com/disclaimer" className="hover:text-white transition-colors">Disclaimer</a>
+          <a href="https://tip-root.in/contact" className="hover:text-white transition-colors">Contact Us</a>
+          <a href="https://tip-root.in/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+          <a href="https://tip-root.in/terms" className="hover:text-white transition-colors">Terms of Service</a>
+          <a href="https://tip-root.in/disclaimer" className="hover:text-white transition-colors">Disclaimer</a>
         </div>
       </footer>
     </div>

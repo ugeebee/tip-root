@@ -14,7 +14,7 @@ export default function ClaimAccountPage() {
         setError('');
 
         try {
-            const res = await fetch('https://adminroot.ugbhartariya.com/api/auth/claim', {
+            const res = await fetch('https://streamer.tip-root.in/api/auth/claim', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include', // Extremely important so it sends the pending cookie
@@ -23,7 +23,7 @@ export default function ClaimAccountPage() {
 
             if (res.ok) {
                 // Master password was correct, account is created, JWTs are in cookies!
-                window.location.href = 'https://adminroot.ugbhartariya.com/dashboard';
+                window.location.href = 'https://streamer.tip-root.in/dashboard';
             } else {
                 const text = await res.text();
                 setError(text || 'Incorrect master password');

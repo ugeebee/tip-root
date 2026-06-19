@@ -10,7 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = async () => {
     try {
-      const res = await fetch('https://adminroot.ugbhartariya.com/api/auth/logout', {
+      const res = await fetch('https://streamer.tip-root.in/api/auth/logout', {
         method: 'POST',
       });
       if (res.ok) {

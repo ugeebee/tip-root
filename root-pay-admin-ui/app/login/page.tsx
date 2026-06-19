@@ -3,7 +3,7 @@
 export default function LoginPage() {
   const handleDiscordLogin = () => {
     // Corrected to match r.Get("/{provider}", beginAuth)
-    window.location.href = 'https://adminroot.ugbhartariya.com/api/auth/discord';
+    window.location.href = 'https://streamer.tip-root.in/api/auth/discord';
   };
 
   return (
@@ -13,7 +13,7 @@ export default function LoginPage() {
           Tip Root
         </div>
         <div className="flex gap-6 items-center">
-          <a className="text-[#d6c0d3] font-medium hover:text-[#fbabff] transition-colors duration-200" href="https://root.ugbhartariya.com/contact">Support</a>
+          <a className="text-[#d6c0d3] font-medium hover:text-[#fbabff] transition-colors duration-200" href="https://tip-root.in/contact">Support</a>
           <a className="text-[#fbabff] font-bold border-b-2 border-[#fbabff] pb-1" href="#">Sign In</a>
         </div>
       </header>

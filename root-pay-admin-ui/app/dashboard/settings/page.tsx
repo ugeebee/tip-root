@@ -26,7 +26,7 @@ export default function SettingsPage() {
         const fetchSettings = async () => {
             try {
                 // Fetch Profile Data
-                const settingsRes = await fetch('https://adminroot.ugbhartariya.com/api/dashboard/settings', {
+                const settingsRes = await fetch('https://streamer.tip-root.in/api/dashboard/settings', {
                     credentials: 'include'
                 });
                 if (settingsRes.ok) {
@@ -39,7 +39,7 @@ export default function SettingsPage() {
                 }
 
                 // Fetch Secure Token
-                const tokenRes = await fetch('https://adminroot.ugbhartariya.com/api/dashboard/token', {
+                const tokenRes = await fetch('https://streamer.tip-root.in/api/dashboard/token', {
                     credentials: 'include'
                 });
                 if (tokenRes.ok) {
@@ -59,7 +59,7 @@ export default function SettingsPage() {
     const handleSaveSettings = async () => {
         setIsSaving(true);
         try {
-            const res = await fetch('https://adminroot.ugbhartariya.com/api/dashboard/settings', {
+            const res = await fetch('https://streamer.tip-root.in/api/dashboard/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -86,7 +86,7 @@ export default function SettingsPage() {
 
         setIsRotating(true);
         try {
-            const res = await fetch('https://adminroot.ugbhartariya.com/api/dashboard/token/rotate', {
+            const res = await fetch('https://streamer.tip-root.in/api/dashboard/token/rotate', {
                 method: 'POST',
                 credentials: 'include'
             });

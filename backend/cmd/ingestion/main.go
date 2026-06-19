@@ -57,7 +57,7 @@ func main() {
 	})
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://xyz.com"},
+		AllowedOrigins:   []string{"https://tip-root.in", "https://streamer.tip-root.in"},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization"},
 		AllowCredentials: true,

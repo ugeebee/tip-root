@@ -18,7 +18,7 @@ export default function LedgerPage() {
     useEffect(() => {
         const fetchLedger = async () => {
             try {
-                const res = await fetch('https://adminroot.ugbhartariya.com/api/dashboard/ledger', {
+                const res = await fetch('https://streamer.tip-root.in/api/dashboard/ledger', {
                     credentials: 'include'
                 });
                 if (res.ok) {

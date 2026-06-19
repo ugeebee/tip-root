@@ -62,7 +62,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://adminroot.ugbhartariya.com"},
+		AllowedOrigins:   []string{"https://streamer.tip-root.in"},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization"},
 		AllowCredentials: true,

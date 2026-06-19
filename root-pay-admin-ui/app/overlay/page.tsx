@@ -27,7 +27,7 @@ function OverlayEngine() {
 
     // NEW: Connect using the full secure URL with the token
     const eventSource = new EventSource(
-      `https://adminroot.ugbhartariya.com/api/overlay/stream?streamer_id=${streamerId}&token=${token}`
+      `https://streamer.tip-root.in/api/overlay/stream?streamer_id=${streamerId}&token=${token}`
     );
 
     eventSource.onmessage = (event) => {
