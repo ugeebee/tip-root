@@ -315,6 +315,16 @@ func issueTokens(w http.ResponseWriter, streamerID string) error {
 		return err
 	}
 
+	_, _ = dbPool.Exec(context.Background(), "DELETE FROM active_sessions WHERE streamer_id = $1", streamerID)
+	_, err = dbPool.Exec(context.Background(), `
+        INSERT INTO active_sessions (streamer_id, refresh_token) 
+        VALUES ($1, $2)
+    `, streamerID, signedRefresh)
+	if err != nil {
+		log.Printf("Failed to save active session: %v", err)
+		return err
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "root_access",
 		Value:    signedAccess,
