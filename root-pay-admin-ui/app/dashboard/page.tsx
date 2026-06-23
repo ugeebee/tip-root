@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Loader2, Tv, Video, Smartphone, ChevronDown, ChevronUp, Info, Check } from "lucide-react";
+import { Copy, Loader2, Tv, Video, Smartphone, ChevronDown, ChevronUp, Info, Check, QrCode } from "lucide-react";
+import QRCode from "react-qr-code";
 
 export default function CommandCenter() {
   const [streamerId, setStreamerId] = useState<string>("........");
@@ -10,6 +11,7 @@ export default function CommandCenter() {
   
   // Interactive UI states for the OBS Widget drawer
   const [isObsDropdownOpen, setIsObsDropdownOpen] = useState<boolean>(false);
+  const [isSpcDropdownOpen, setIsSpcDropdownOpen] = useState<boolean>(false);
   const [isWidgetCopied, setIsWidgetCopied] = useState<boolean>(false);
 
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function CommandCenter() {
           <h1 className="text-3xl font-bold text-white mb-2">Command Center</h1>
           <p className="text-[#9f8b9d]">Welcome back. Here is your stream's financial overview.</p>
         </div>
-        {loading && <Loader2 className="animate-spin text-[#fbabff]" size={24} />}Prefix
+        {loading && <Loader2 className="animate-spin text-[#fbabff]" size={24} />}
       </header>
 
       {/* Tipping URL Card */}
@@ -152,19 +154,56 @@ export default function CommandCenter() {
         </div>
 
         {/* Tip Root SPC App Card */}
-        <div className="rounded-xl bg-white/5 border border-white/10 p-5 backdrop-blur-md flex items-center justify-between transition-all hover:bg-white/10">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
-              <Smartphone size={20} className="text-[#c4abff]" />
+        <div className="md:col-span-1 flex flex-col rounded-xl bg-white/5 border border-white/10 backdrop-blur-md transition-all overflow-hidden">
+          <div 
+            onClick={() => !loading && setIsSpcDropdownOpen(!isSpcDropdownOpen)}
+            className={`p-5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors ${isSpcDropdownOpen ? 'border-b border-white/10 bg-white/5' : ''}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+                <Smartphone size={20} className="text-[#c4abff]" />
+              </div>
+              <div>
+                <h3 className="font-medium text-white">Tip Root App</h3>
+                <p className="text-xs text-[#9f8b9d]">Mobile controller</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-medium text-white">Tip Root SPC App</h3>
-              <p className="text-xs text-[#9f8b9d]">Mobile controller</p>
+            <div className="flex items-center gap-3">
+              <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">Link Device</span>
+              {isSpcDropdownOpen ? <ChevronUp size={16} className="text-[#9f8b9d]" /> : <ChevronDown size={16} className="text-[#9f8b9d]" />}
             </div>
           </div>
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-400 border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]">Disconnected</span>
-        </div>
 
+        {/* Expandable QR Scanner Drawer (SPC APP) */}
+          {isSpcDropdownOpen && (
+            <div className="p-6 bg-black/30 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 flex flex-col items-center text-center">
+              <div className="w-10 h-10 rounded-full bg-[#c4abff]/10 flex items-center justify-center mb-1">
+                <QrCode size={20} className="text-[#c4abff]" />
+              </div>
+              <h4 className="font-bold text-white">Link your Smartphone</h4>
+              <p className="text-xs text-[#9f8b9d] max-w-[200px]">
+                Open the Tip Root app on your phone and scan this code to connect.
+              </p>
+              
+              {/* QR Code Container (White background is required so cameras can easily read the contrast) */}
+              <div className="bg-white p-3 rounded-xl shadow-[0_0_20px_rgba(196,171,255,0.2)] mt-2">
+                {overlayToken ? (
+                  <QRCode 
+                    value={overlayToken} 
+                    size={140} 
+                    level="Q" 
+                    className="rounded-md"
+                  />
+                ) : (
+                  <div className="w-[140px] h-[140px] flex items-center justify-center">
+                    <Loader2 className="animate-spin text-gray-300" />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   );

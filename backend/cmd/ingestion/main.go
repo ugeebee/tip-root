@@ -5,7 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
-	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -75,11 +75,29 @@ func main() {
 }
 
 func (s *IngestionServer) handleWebhook(w http.ResponseWriter, r *http.Request) {
-	urlToken := r.URL.Query().Get("token")
-	expectedToken := os.Getenv("WEBHOOK_SECRET_TOKEN")
-	if urlToken == "" || urlToken != expectedToken {
-		log.Printf("[Ingestion] ⚠️ Unauthorized webhook attempt. Token provided: %s", urlToken)
-		http.Error(w, "Unauthorized: Invalid or missing token", http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Unauthorized: Missing Authorization header", http.StatusUnauthorized)
+		return
+	}
+
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		http.Error(w, "Unauthorized: Invalid Authorization format", http.StatusUnauthorized)
+		return
+	}
+	providedToken := parts[1]
+
+	var requestingStreamerID string
+	err := database.DB.QueryRow(
+		r.Context(),
+		"SELECT id FROM streamers WHERE overlay_token = $1",
+		providedToken,
+	).Scan(&requestingStreamerID)
+
+	if err != nil {
+		log.Printf("[Ingestion] ⚠️ Unauthorized webhook attempt. Invalid App Token: %s", providedToken)
+		http.Error(w, "Unauthorized: Invalid App Token", http.StatusUnauthorized)
 		return
 	}
 
@@ -93,6 +111,12 @@ func (s *IngestionServer) handleWebhook(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		log.Printf("Tip not found or already processed: %s", req.ClientKey)
 		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if tipRecord.StreamerID != requestingStreamerID {
+		log.Printf("⚠️ Security Alert: Streamer %s attempted to ack tip %s belonging to %s", requestingStreamerID, req.ClientKey, tipRecord.StreamerID)
+		http.Error(w, "Unauthorized: Tip does not belong to your account", http.StatusForbidden)
 		return
 	}
 
