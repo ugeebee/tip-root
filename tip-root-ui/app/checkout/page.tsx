@@ -92,7 +92,7 @@ function CheckoutGateway() {
               <div className="w-2 h-2 rounded-full bg-[#6D28D9] animate-ping"></div>
               <span className="text-sm font-medium">Waiting for ledger verification...</span>
             </div>
-            <p className="text-xs text-gray-400 mt-4 break-all">Support ID: {supportKey}</p>
+            <p className="text-xs text-gray-400 mt-4 break-all">Support ID: {supportKey}  </p>
           </div>
         )}
 
