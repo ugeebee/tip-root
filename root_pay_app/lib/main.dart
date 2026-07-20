@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:notification_listener_service/notification_event.dart';
 import 'package:http/http.dart' as http;
@@ -40,7 +41,7 @@ void callbackDispatcher() {
           Uri.parse(goServerWebhookUrl),
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer $token" // Secure Header
+            "Authorization": "Bearer $token", // Secure Header
           },
           body: jsonEncode({"client_key": key}),
         );
@@ -98,13 +99,12 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _hasPermission = false;
   bool _hasToken = false;
-  
+
   final secureStorage = const FlutterSecureStorage();
   final List<String> _targetPackages = [
     "com.google.android.apps.nbu.paisa.user",
     "com.phonepe.app",
     "net.one97.paytm",
-    "com.whatsapp", //TODO - testing
   ];
 
   @override
@@ -116,7 +116,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _checkSetup() async {
     String? token = await secureStorage.read(key: 'webhook_token');
     bool isGranted = await NotificationListenerService.isPermissionGranted();
-    
+
     setState(() {
       _hasToken = (token != null && token.isNotEmpty);
       _hasPermission = isGranted;
@@ -141,8 +141,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (scannedToken != null && scannedToken.isNotEmpty) {
       print("🎯 Scanned Token: $scannedToken");
-      await secureStorage.write(key: 'webhook_token', value: scannedToken.trim());
-      _checkSetup(); 
+      await secureStorage.write(
+        key: 'webhook_token',
+        value: scannedToken.trim(),
+      );
+      _checkSetup();
     }
   }
 
@@ -165,11 +168,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             TextButton(
               child: const Text('OK', style: TextStyle(color: Colors.red)),
               onPressed: () async {
-                Navigator.of(dialogContext).pop(); 
-                
+                Navigator.of(dialogContext).pop();
+
                 // Delete the token and reset UI
                 await secureStorage.delete(key: 'webhook_token');
-                _checkSetup(); 
+                _checkSetup();
               },
             ),
           ],
@@ -183,7 +186,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final RegExp keyRegExp = RegExp(r'\b\d{32}\b');
 
     NotificationListenerService.notificationsStream.listen((event) async {
-      if (_targetPackages.contains(event.packageName) && event.content != null) {
+      if (_targetPackages.contains(event.packageName) &&
+          event.content != null) {
         var match = keyRegExp.firstMatch(event.content!);
 
         if (match != null) {
@@ -195,8 +199,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  static const _wakeLockChannel = MethodChannel(
+    'com.example.root_pay_app/wakelock',
+  );
+
   Future<void> _processKey(String clientKey) async {
     try {
+      await _wakeLockChannel.invokeMethod('acquire');
       String? token = await secureStorage.read(key: 'webhook_token');
       if (token == null) return;
 
@@ -204,7 +213,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Uri.parse(goServerWebhookUrl),
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer $token" // Sent Securely!
+          "Authorization": "Bearer $token", // Sent Securely!
         },
         body: jsonEncode({"client_key": clientKey}),
       );
@@ -216,6 +225,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (e) {
       _triggerWorkManagerSync();
+    } finally {
+      await _wakeLockChannel.invokeMethod('release');
     }
   }
 
@@ -231,7 +242,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('tip-root Engine', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'tip-root Engine',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
       ),
@@ -241,14 +255,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              
               // ==========================================
               // STATE 1: NO TOKEN
               // ==========================================
               if (!_hasToken) ...[
                 const Icon(Icons.qr_code_scanner, size: 80, color: Colors.blue),
                 const SizedBox(height: 20),
-                const Text("Link your Device", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                const Text(
+                  "Link your Device",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 10),
                 const Text(
                   "Scan the QR code displayed on your dashboard to connect.",
@@ -261,7 +277,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: const Icon(Icons.camera_alt),
                   label: const Text("Scan QR Code"),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
                     textStyle: const TextStyle(fontSize: 18),
                   ),
                 ),
@@ -271,11 +290,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // STATE 2: TOKEN EXISTS, BUT NO PERMISSION
               // ==========================================
               if (_hasToken && !_hasPermission) ...[
-                const Icon(Icons.warning_amber_rounded, size: 80, color: Colors.orange),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 80,
+                  color: Colors.orange,
+                ),
                 const SizedBox(height: 20),
-                const Text("Final Step!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                const Text(
+                  "Final Step!",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 10),
-                const Text("We need permission to read the UPI notifications.", textAlign: TextAlign.center),
+                const Text(
+                  "We need permission to read the UPI notifications.",
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _requestPermission,
@@ -289,7 +318,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               if (_hasToken && _hasPermission) ...[
                 const Icon(Icons.check_circle, size: 100, color: Colors.green),
                 const SizedBox(height: 20),
-                const Text("Connected & Listening", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                const Text(
+                  "Connected & Listening",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 10),
                 const Text(
                   "Keep this app running in the background.",
@@ -297,17 +329,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: TextStyle(color: Colors.grey),
                 ),
                 const SizedBox(height: 60),
-                
+
                 // The Rotate Token Button
                 OutlinedButton.icon(
                   onPressed: _confirmRotateToken, // Triggers Alert Dialog
                   icon: const Icon(Icons.autorenew, color: Colors.red),
-                  label: const Text("Rotate Token", style: TextStyle(color: Colors.red)),
+                  label: const Text(
+                    "Rotate Token",
+                    style: TextStyle(color: Colors.red),
+                  ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.red),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                   ),
-                )
+                ),
               ],
             ],
           ),
