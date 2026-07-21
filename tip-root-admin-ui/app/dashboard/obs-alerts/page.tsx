@@ -17,6 +17,7 @@ interface TipEvent {
 export default function ObsAlertsPage() {
     const [tips, setTips] = useState<TipEvent[]>([]);
     const [isConnected, setIsConnected] = useState(false);
+    const [isTesting, setIsTesting] = useState(false);
 
     useEffect(() => {
         // Connect to the dashbUpdates microservice SSE stream
@@ -67,6 +68,20 @@ export default function ObsAlertsPage() {
         setTips((prev) => prev.filter(t => t.client_key !== clientKey));
     };
 
+    const handleTestTip = async () => {
+        setIsTesting(true);
+        try {
+            await fetch('https://streamer.tip-root.in/api/dashboard/tips/test', {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } catch (error) {
+            console.error("Failed to send test tip:", error);
+        } finally {
+            setTimeout(() => setIsTesting(false), 1000);
+        }
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-5xl">
             {/* Page Header */}
@@ -77,15 +92,25 @@ export default function ObsAlertsPage() {
                         Monitor your live stream tips. Flagged messages require manual approval before appearing on stream.
                     </p>
                 </div>
-                {/* Live Status Indicator */}
-                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full">
-                    <span className="relative flex h-3 w-3">
-                        {isConnected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
-                        <span className={`relative inline-flex rounded-full h-3 w-3 ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                    </span>
-                    <span className="text-sm font-semibold text-white">
-                        {isConnected ? 'Stream Connected' : 'Reconnecting...'}
-                    </span>
+                {/* Actions */}
+                <div className="flex items-center gap-4">
+                    <button 
+                        onClick={handleTestTip}
+                        disabled={isTesting}
+                        className="bg-gradient-to-r from-[#fbabff] to-[#571bc1] text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-all hover:opacity-90 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:pointer-events-none shadow-lg"
+                    >
+                        {isTesting ? 'Sending...' : 'Test Tip Overlay'}
+                    </button>
+                    {/* Live Status Indicator */}
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full">
+                        <span className="relative flex h-3 w-3">
+                            {isConnected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
+                            <span className={`relative inline-flex rounded-full h-3 w-3 ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                        </span>
+                        <span className="text-sm font-semibold text-white">
+                            {isConnected ? 'Stream Connected' : 'Reconnecting...'}
+                        </span>
+                    </div>
                 </div>
             </header>
 

@@ -70,6 +70,7 @@ func main() {
 
 	r.Get("/api/dashboard/updates/stream", verifyAccessMiddleware(streamDashboardUpdates))
 	r.Post("/api/dashboard/tips/approve", verifyAccessMiddleware(approveTipHandler))
+	r.Post("/api/dashboard/tips/test", verifyAccessMiddleware(testTipHandler))
 	r.Get("/api/dashboard/ledger", verifyAccessMiddleware(getLedgerHandler))
 	slog.Info("Dashboard Updates Microservice live", slog.String("port", "8086"))
 	log.Fatal(http.ListenAndServe(":8086", r))
@@ -151,6 +152,24 @@ func approveTipHandler(w http.ResponseWriter, r *http.Request, streamerID string
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "approved"}`))
+}
+
+func testTipHandler(w http.ResponseWriter, r *http.Request, streamerID string) {
+	testEvent := models.TipEvent{
+		ClientKey:  fmt.Sprintf("test-%d", time.Now().UnixNano()),
+		StreamerID: streamerID,
+		Name:       "Test",
+		Amount:     50,
+		Message:    "This is a test message this persists for 8 seconds right now.",
+		IsNSFW:     false,
+		Timestamp:  time.Now(),
+	}
+
+	eventData, _ := json.Marshal(testEvent)
+	jetStream.Publish("tips.approved", eventData)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status": "test sent"}`))
 }
 
 func verifyAccessMiddleware(next func(w http.ResponseWriter, r *http.Request, streamerID string)) http.HandlerFunc {
