@@ -58,12 +58,26 @@ function OverlayEngine() {
       setCurrentAlert(nextTip);
       setIsVisible(true);
 
-      // Trigger TTS reading the alert
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Clear any pending/ongoing speech
-        const textToSpeak = `${nextTip.name} tipped ${nextTip.amount}. ${nextTip.message || ''}`;
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        window.speechSynthesis.speak(utterance);
+      // Trigger TTS reading the alert (Using Audio API + Google TTS for OBS Compatibility)
+      const textToSpeak = `${nextTip.name} tipped ${nextTip.amount}. ${nextTip.message || ''}`;
+      
+      try {
+        // OBS Browser Source often lacks voices for window.speechSynthesis, so we use an Audio object
+        // calling the Google Translate TTS API as a reliable workaround.
+        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(textToSpeak)}&tl=en&client=tw-ob`;
+        const audio = new Audio(ttsUrl);
+        
+        audio.play().catch(e => {
+          console.warn("Audio play failed (OBS might need 'Control audio via OBS' checked):", e);
+          // Fallback to native synthesis if Audio API is strictly blocked
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            window.speechSynthesis.speak(utterance);
+          }
+        });
+      } catch (err) {
+        console.error("TTS failed:", err);
       }
 
       // Remove it from the queue
