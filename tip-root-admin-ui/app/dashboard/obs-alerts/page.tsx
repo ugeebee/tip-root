@@ -94,7 +94,7 @@ export default function ObsAlertsPage() {
                 </div>
                 {/* Actions */}
                 <div className="flex items-center gap-4">
-                    <button 
+                    <button
                         onClick={handleTestTip}
                         disabled={isTesting}
                         className="bg-gradient-to-r from-[#fbabff] to-[#571bc1] text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-all hover:opacity-90 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:pointer-events-none shadow-lg"
@@ -136,8 +136,8 @@ export default function ObsAlertsPage() {
                             <div
                                 key={tip.client_key}
                                 className={`rounded-xl p-5 border transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4 ${tip.is_nsfw
-                                        ? 'bg-red-500/10 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
-                                        : 'bg-black/20 border-white/5 hover:border-white/10'
+                                    ? 'bg-red-500/10 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
+                                    : 'bg-black/20 border-white/5 hover:border-white/10'
                                     }`}
                             >
                                 {/* Left Side: Tip Info */}

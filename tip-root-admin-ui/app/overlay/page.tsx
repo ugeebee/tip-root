@@ -19,6 +19,7 @@ function OverlayEngine() {
   const [queue, setQueue] = useState<TipAlert[]>([]);
   const [currentAlert, setCurrentAlert] = useState<TipAlert | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [audioBlocked, setAudioBlocked] = useState(false);
 
   // 1. Connect to the Secure Go OBS Engine
   useEffect(() => {
@@ -60,15 +61,18 @@ function OverlayEngine() {
 
       // Trigger TTS reading the alert (Using Audio API + Google TTS for OBS Compatibility)
       const textToSpeak = `${nextTip.name} tipped ${nextTip.amount}. ${nextTip.message || ''}`;
-      
+
       try {
         // OBS Browser Source often lacks voices for window.speechSynthesis, so we use an Audio object
         // calling the Google Translate TTS API as a reliable workaround.
         const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(textToSpeak)}&tl=en&client=tw-ob`;
         const audio = new Audio(ttsUrl);
-        
+
         audio.play().catch(e => {
           console.warn("Audio play failed (OBS might need 'Control audio via OBS' checked):", e);
+          if (e.name === 'NotAllowedError') {
+            setAudioBlocked(true);
+          }
           // Fallback to native synthesis if Audio API is strictly blocked
           if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
@@ -101,6 +105,16 @@ function OverlayEngine() {
   return (
     // The background must be completely transparent for OBS
     <div className="w-screen h-screen overflow-hidden flex items-center justify-center bg-transparent font-sans relative">
+
+      {/* Browser Autoplay Unblocker */}
+      {audioBlocked && (
+        <button 
+          onClick={() => setAudioBlocked(false)}
+          className="absolute top-4 left-4 bg-red-600 text-white px-6 py-3 rounded-xl font-bold shadow-2xl z-[9999] animate-bounce"
+        >
+          🔇 Click anywhere on page to enable Audio! (Browser blocked autoplay)
+        </button>
+      )}
 
       {/* Live Badge */}
       <div className="absolute top-8 right-8 flex items-center gap-3 bg-black/50 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/20 shadow-lg z-50">
