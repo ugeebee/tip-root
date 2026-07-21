@@ -135,7 +135,7 @@ func (s *IngestionServer) handleWebhook(w http.ResponseWriter, r *http.Request) 
 
 	eventData, _ := json.Marshal(event)
 
-	if _, err := s.js.Publish("tips.processed", eventData); err != nil {
+	if _, err := s.js.Publish("tips.ingested", eventData); err != nil {
 		log.Printf("Failed to publish to JetStream: %v", err)
 	}
 
