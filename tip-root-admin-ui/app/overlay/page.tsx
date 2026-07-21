@@ -58,16 +58,24 @@ function OverlayEngine() {
       setCurrentAlert(nextTip);
       setIsVisible(true);
 
+      // Trigger TTS reading the alert
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Clear any pending/ongoing speech
+        const textToSpeak = `${nextTip.name} tipped ${nextTip.amount}. ${nextTip.message || ''}`;
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        window.speechSynthesis.speak(utterance);
+      }
+
       // Remove it from the queue
       setQueue((prev) => prev.slice(1));
 
-      // Hide the alert after 5 seconds, wait 1 second, then process the next
+      // Hide the alert after 8 seconds, wait 1 second, then process the next
       setTimeout(() => {
         setIsVisible(false);
         setTimeout(() => {
           setCurrentAlert(null);
         }, 1000); // 1s cooldown between alerts
-      }, 5000); // 5s display time
+      }, 8000); // 8s display time
     }
   }, [queue, currentAlert]);
 
@@ -78,7 +86,13 @@ function OverlayEngine() {
 
   return (
     // The background must be completely transparent for OBS
-    <div className="w-screen h-screen overflow-hidden flex items-center justify-center bg-transparent font-sans">
+    <div className="w-screen h-screen overflow-hidden flex items-center justify-center bg-transparent font-sans relative">
+
+      {/* Live Badge */}
+      <div className="absolute top-8 right-8 flex items-center gap-3 bg-black/50 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/20 shadow-lg z-50">
+        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(239,68,68,1)]" />
+        <span className="text-white font-semibold tracking-wide text-sm drop-shadow-md">Tip-Root is live</span>
+      </div>
 
       {/* The Alert Box */}
       <div
