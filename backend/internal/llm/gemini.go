@@ -33,7 +33,7 @@ func CheckProfanity(name, message string) bool {
 	}
 	defer client.Close()
 
-	model := client.GenerativeModel("gemini-1.5-flash")
+	model := client.GenerativeModel("gemini-3.5-flash")
 	model.ResponseMIMEType = "application/json"
 	model.SystemInstruction = &genai.Content{
 		Parts: []genai.Part{
