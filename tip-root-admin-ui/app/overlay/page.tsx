@@ -64,8 +64,8 @@ function OverlayEngine() {
 
       try {
         // OBS Browser Source often lacks voices for window.speechSynthesis, so we use an Audio object
-        // calling the Google Translate TTS API as a reliable workaround.
-        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(textToSpeak)}&tl=en&client=tw-ob`;
+        // We route this through our own Next.js API to bypass Google's strict browser CORS/Referer blocks.
+        const ttsUrl = `/api/tts?text=${encodeURIComponent(textToSpeak)}`;
         const audio = new Audio(ttsUrl);
 
         audio.play().catch(e => {
