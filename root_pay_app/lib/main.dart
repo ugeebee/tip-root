@@ -9,7 +9,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'database_helper.dart';
 import 'qr_scanner_screen.dart';
 
-const String goServerWebhookUrl = "https://tip-root.in/api/webhooks/upi";
+const String goServerWebhookUrl = "https://api.tip-root.in/api/webhooks/upi";
 
 // IMPORTANT: WorkManager requires a top-level or static function.
 @pragma('vm:entry-point')
