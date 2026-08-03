@@ -16,7 +16,7 @@ export default function CommandCenter() {
 
   useEffect(() => {
     // 1. Fetch Secure Streamer Statistics & ID
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/dashboard/stats`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/dashboard/stats`, { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) throw new Error("Unauthorized context handshake");
         const data = await res.text();
