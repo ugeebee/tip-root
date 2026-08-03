@@ -49,7 +49,7 @@ function SupportEngine() {
 
     setStatus('LOADING');
     try {
-      const res = await fetch('/api/support', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/support`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ support_key: supportKeyParam, upi_id: upiId, issue }),

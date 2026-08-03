@@ -13,7 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     const refreshSession = async () => {
       try {
-        await fetch('https://streamer.tip-root.in/api/auth/refresh', {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/refresh`, {
           method: 'POST',
           credentials: 'include' 
         });
@@ -29,7 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = async () => {
     try {
-      const res = await fetch('https://streamer.tip-root.in/api/auth/logout', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });

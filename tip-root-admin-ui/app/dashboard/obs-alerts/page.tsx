@@ -21,7 +21,7 @@ export default function ObsAlertsPage() {
 
     useEffect(() => {
         // Connect to the dashbUpdates microservice SSE stream
-        const eventSource = new EventSource('https://streamer.tip-root.in/api/dashboard/updates/stream', {
+        const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/dashboard/updates/stream`, {
             withCredentials: true
         });
 
@@ -45,7 +45,7 @@ export default function ObsAlertsPage() {
 
     const handleApprove = async (clientKey: string) => {
         try {
-            const res = await fetch('https://streamer.tip-root.in/api/dashboard/tips/approve', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/dashboard/tips/approve`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',

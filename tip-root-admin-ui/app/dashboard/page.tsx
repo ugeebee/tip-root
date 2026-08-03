@@ -16,7 +16,7 @@ export default function CommandCenter() {
 
   useEffect(() => {
     // 1. Fetch Secure Streamer Statistics & ID
-    fetch("https://streamer.tip-root.in/api/dashboard/stats")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/dashboard/stats`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Unauthorized context handshake");
         const data = await res.text();
@@ -26,7 +26,7 @@ export default function CommandCenter() {
       .catch((err) => console.error("Could not fetch secure metric claims:", err));
 
     // 2. Fetch Secure Overlay Token for the Widget link
-    fetch("https://streamer.tip-root.in/api/dashboard/token", { credentials: "include" })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/dashboard/token`, { credentials: "include" })
       .then(async (res) => {
         if (res.ok) {
           const tokenData = await res.json();

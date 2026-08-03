@@ -15,7 +15,7 @@ function CheckoutGateway() {
   const [paymentStatus, setPaymentStatus] = useState<'PENDING' | 'PAID' | 'ERROR'>('PENDING');
 
   // 1. UPDATED PORT: Pointing to 8082 where your SSE microservice is running
-  const BACKEND_URL = '/api';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : '/api';
 
   useEffect(() => {
     if (!clientKey) {

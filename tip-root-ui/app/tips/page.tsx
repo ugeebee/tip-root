@@ -39,7 +39,7 @@ function TipsEngine() {
   }, []);
 
   const presetAmounts = [50, 100, 250, 500, 1000];
-  const BACKEND_URL = '/api';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : '/api';
 
     useEffect(() => {
     async function fetchStreamerData() {

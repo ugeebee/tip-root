@@ -14,7 +14,7 @@ export default function ClaimAccountPage() {
         setError('');
 
         try {
-            const res = await fetch('https://streamer.tip-root.in/api/auth/claim', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/claim`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include', // Extremely important so it sends the pending cookie

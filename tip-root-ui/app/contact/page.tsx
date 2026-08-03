@@ -23,7 +23,7 @@ export default function ContactPage() {
     };
 
     try {
-      await fetch("/api/contact", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

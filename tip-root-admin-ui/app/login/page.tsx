@@ -3,7 +3,7 @@
 export default function LoginPage() {
   const handleDiscordLogin = () => {
     // Corrected to match r.Get("/{provider}", beginAuth)
-    window.location.href = 'https://streamer.tip-root.in/api/auth/discord';
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/discord`;
   };
 
   return (
